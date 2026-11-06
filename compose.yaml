@@ -1,0 +1,20 @@
+services:
+  player-web:
+    build:
+      context: .
+      args:
+        VITE_CLIENT_DOWNLOAD_URL: ${VITE_CLIENT_DOWNLOAD_URL}
+        VITE_CLIENT_SIZE: ${VITE_CLIENT_SIZE:-2.1 GB}
+    restart: unless-stopped
+    environment:
+      OPENMU_API_URL: ${OPENMU_API_URL}
+      OPENMU_API_KEY: ${OPENMU_API_KEY}
+      TRUST_PROXY: "true"
+      UPSTREAM_TIMEOUT_MS: ${UPSTREAM_TIMEOUT_MS:-8000}
+    ports:
+      - "${WEB_PORT:-8080}:8080"
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
