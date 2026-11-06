@@ -1,5 +1,5 @@
 import { createReadStream, existsSync, statSync } from "node:fs";
-import { extname, join, normalize, resolve } from "node:path";
+import { extname, join, normalize, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = resolve(fileURLToPath(new URL("../dist", import.meta.url)));
@@ -102,9 +102,12 @@ async function status(response, config) {
 }
 
 function staticFile(request, response) {
-  const urlPath = decodeURIComponent(new URL(request.url, "http://localhost").pathname);
+  let urlPath;
+  try { urlPath = decodeURIComponent(new URL(request.url, "http://localhost").pathname); }
+  catch { return json(response, 400, { error: "Invalid URL path." }); }
   const candidate = resolve(root, normalize(urlPath).replace(/^[/\\]+/, ""));
-  const file = candidate.startsWith(root) && existsSync(candidate) && statSync(candidate).isFile() ? candidate : join(root, "index.html");
+  const insideRoot = candidate === root || candidate.startsWith(`${root}${sep}`);
+  const file = insideRoot && existsSync(candidate) && statSync(candidate).isFile() ? candidate : join(root, "index.html");
   const extension = extname(file).toLowerCase();
   response.writeHead(200, { "Content-Type": mimeTypes.get(extension) ?? "application/octet-stream", "Cache-Control": extension === ".html" ? "no-cache" : "public, max-age=31536000, immutable" });
   if (request.method === "HEAD") return response.end();

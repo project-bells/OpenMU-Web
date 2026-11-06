@@ -59,3 +59,15 @@ test("server status normalizes OpenMU's JSON-string response", async (context) =
   assert.equal(body.players, 42);
   assert.equal("playersList" in body, false);
 });
+
+test("malformed and traversal-like static paths never escape the dist root", async (context) => {
+  const gateway = await listen(createHandler({ apiUrl: "https://openmu.invalid", apiKey: "x".repeat(32), trustProxy: false, requestTimeoutMs: 1000 }));
+  context.after(() => gateway.server.close());
+
+  const malformed = await fetch(`${gateway.url}/%E0%A4%A`);
+  assert.equal(malformed.status, 400);
+
+  const traversal = await fetch(`${gateway.url}/..%2Fserver%2Fapp.mjs`);
+  assert.equal(traversal.status, 200);
+  assert.doesNotMatch(await traversal.text(), /OPENMU_API_KEY|createHandler/);
+});
