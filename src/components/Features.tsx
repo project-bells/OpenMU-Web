@@ -1,29 +1,10 @@
 import { Zap, Gem, ShieldCheck, Swords, Flame, Radar, ArrowRight, Activity } from "lucide-react";
 import { RATE_META, SERVERS } from "../data";
-import { useInView, useCountUp, useLiveOnline } from "../hooks/hooks";
+import { useLiveOnline } from "../hooks/hooks";
 import { useI18n } from "../i18n";
 
 const ICONS: Record<string, typeof Zap> = { Zap, Gem, Shield: ShieldCheck, Swords, Flame, Bug: Radar };
 
-function Stat({ target, suffix, label, delay, locale }: { target: number; suffix: string; label: string; delay: number; locale: string }) {
-  const { ref, inView } = useInView<HTMLDivElement>(0.3);
-  const v = useCountUp(target, inView);
-  return (
-    <div ref={ref} className="reveal text-center" style={{ ["--reveal-delay" as string]: `${delay}ms` }}>
-      <p className="font-display text-3xl font-black text-white tabular-nums sm:text-4xl">
-        {v.toLocaleString(locale)}<span className="text-gradient-gold">{suffix}</span>
-      </p>
-      <p className="mt-1.5 text-xs font-semibold tracking-[0.18em] text-white/45 uppercase">{label}</p>
-    </div>
-  );
-}
-
-const STAT_VALUES = [
-  { target: 28417, suffix: "+" },
-  { target: 4821, suffix: "" },
-  { target: 312, suffix: "K" },
-  { target: 147, suffix: "" },
-];
 
 export default function Features() {
   const { t } = useI18n();
@@ -94,12 +75,6 @@ export default function Features() {
               </article>
             );
           })}
-        </div>
-
-        <div className="glass mt-8 grid grid-cols-2 gap-6 rounded-3xl px-6 py-8 sm:grid-cols-4 sm:py-10">
-          {STAT_VALUES.map((s, i) => (
-            <Stat key={i} target={s.target} suffix={s.suffix} label={f.stats[i]} delay={i * 100} locale={t.locale} />
-          ))}
         </div>
 
         <div className="reveal mt-8 text-center">

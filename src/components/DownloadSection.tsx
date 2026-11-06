@@ -2,6 +2,8 @@ import { Download, HardDrive, ShieldCheck, Monitor, AlertTriangle } from "lucide
 import { SYSTEM_SPECS } from "../data";
 
 export default function DownloadSection() {
+  const downloadUrl = import.meta.env.VITE_CLIENT_DOWNLOAD_URL as string | undefined;
+  const clientSize = (import.meta.env.VITE_CLIENT_SIZE as string | undefined) || "See download page";
   return (
     <section id="download" className="relative scroll-mt-28 py-16 sm:py-24">
       {/* Background Ambience */}
@@ -18,7 +20,7 @@ export default function DownloadSection() {
             DOWNLOAD <span className="text-gradient-gold">CLIENT</span>
           </h2>
           <p className="mt-2 text-sm text-white/60 sm:text-base">
-            Clean client, auto-updating launcher, built-in anti-cheat guard. Ready to play in under 5 minutes.
+            Download the official client package configured by the server operator.
           </p>
         </div>
 
@@ -37,65 +39,43 @@ export default function DownloadSection() {
                 </span>
               </div>
               <h3 className="font-display mt-3 text-2xl font-black text-white sm:text-3xl">
-                Download Full Game Client (2.1 GB)
+                Download Full Game Client
               </h3>
               <p className="mt-2 text-sm text-white/70 leading-relaxed">
-                Complete Season 6 Episode 3 client. Includes authentic sound packs, HD textures, widescreen support, and built-in MHP GameGuard. Choose your preferred download mirror below:
+                Season 6 Episode 3 game client for this server. Verify the published checksum before installing.
               </p>
 
               <div className="mt-4 flex flex-wrap items-center gap-4 text-xs font-mono text-white/60">
                 <span className="flex items-center gap-1.5">
                   <HardDrive className="h-4 w-4 text-amber-400" />
-                  File Size: <strong className="text-white">2.1 GB</strong>
+                  File Size: <strong className="text-white">{clientSize}</strong>
                 </span>
                 <span>•</span>
-                <span>Updated: March 2026</span>
-                <span>•</span>
-                <span className="flex items-center gap-1 text-emerald-400">
-                  <ShieldCheck className="h-4 w-4" />
-                  VirusTotal Clean (0/72)
-                </span>
+                <span className="flex items-center gap-1 text-emerald-400"><ShieldCheck className="h-4 w-4" /> Official operator link</span>
               </div>
             </div>
 
             {/* 2 Primary Download Options: Mega + MediaFire */}
             <div className="flex flex-col sm:flex-row lg:flex-col gap-3 shrink-0 min-w-[280px]">
-              {/* 1. Mega.nz */}
               <a
-                href="https://mega.nz"
+                href={downloadUrl || "#download"}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="btn-shine flex items-center justify-between gap-3 rounded-2xl bg-gradient-to-r from-[#d4af37] via-[#ffb52e] to-[#ff8a3c] px-6 py-4 text-sm font-black text-[#090d16] shadow-[0_12px_35px_-8px_rgba(212,175,55,0.45)] transition hover:brightness-110 active:scale-[0.98]"
+                aria-disabled={!downloadUrl}
+                className={`btn-shine flex items-center justify-between gap-3 rounded-2xl px-6 py-4 text-sm font-black shadow-[0_12px_35px_-8px_rgba(212,175,55,0.45)] transition ${downloadUrl ? "bg-gradient-to-r from-[#d4af37] via-[#ffb52e] to-[#ff8a3c] text-[#090d16] hover:brightness-110" : "pointer-events-none bg-white/10 text-white/50"}`}
               >
                 <div className="flex items-center gap-2.5">
                   <Download className="h-5 w-5" />
                   <span className="text-left leading-tight">
-                    <span className="block text-xs font-semibold opacity-75">OPTION 1</span>
-                    <span className="text-sm font-extrabold">DOWNLOAD MEGA</span>
+                    <span className="block text-xs font-semibold opacity-75">OFFICIAL CLIENT</span>
+                    <span className="text-sm font-extrabold">{downloadUrl ? "DOWNLOAD" : "NOT CONFIGURED"}</span>
                   </span>
                 </div>
-                <span className="rounded bg-black/20 px-2 py-1 text-xs font-mono font-bold text-white">2.1 GB</span>
-              </a>
-
-              {/* 2. Mediafire */}
-              <a
-                href="https://www.mediafire.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="glass flex items-center justify-between gap-3 rounded-2xl border-white/20 bg-white/5 px-6 py-4 text-sm font-bold text-white transition hover:border-amber-400/50 hover:bg-amber-400/10 hover:text-amber-200 active:scale-[0.98]"
-              >
-                <div className="flex items-center gap-2.5">
-                  <Download className="h-5 w-5 text-amber-400" />
-                  <span className="text-left leading-tight">
-                    <span className="block text-[11px] font-semibold text-white/50">OPTION 2</span>
-                    <span className="text-sm font-extrabold">DOWNLOAD MEDIAFIRE</span>
-                  </span>
-                </div>
-                <span className="rounded bg-white/10 px-2 py-1 text-xs font-mono text-white/70">2.1 GB</span>
+                <span className="rounded bg-black/20 px-2 py-1 text-xs font-mono font-bold text-white">{clientSize}</span>
               </a>
               
               <div className="text-center text-[11px] text-white/40 pt-1">
-                Fast Cloud Mirrors • Direct Resume Supported
+                Configure VITE_CLIENT_DOWNLOAD_URL during the production build.
               </div>
             </div>
           </div>
@@ -193,7 +173,7 @@ export default function DownloadSection() {
               <strong className="text-white block font-bold mb-1">
                 Antivirus & Windows Defender False Positive Notice:
               </strong>
-              Due to our proprietary Anti-Cheat protection (MHP GameGuard / Main.exe packer) designed to prevent memory injection and speedhacks, some antivirus scanners may report a false positive. We guarantee our game files are 100% clean, virus-free, and safe. Please add the MuOrigins game folder to your Antivirus Exclusions list if the game fails to launch.
+              Only download the client from the official link above. Verify its checksum when one is published. Do not disable antivirus protection globally; submit a suspicious file to the operator before adding a narrowly scoped exclusion.
             </div>
           </div>
         </div>

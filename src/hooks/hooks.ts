@@ -94,18 +94,24 @@ export function useInView<T extends HTMLElement>(threshold = 0.2) {
   return { ref, inView };
 }
 
-/** Live ticking online counter simulation */
-export function useLiveOnline(base = 4821) {
-  const [online, setOnline] = useState(base);
+/** Player count reported by the OpenMU server gateway. */
+export function useLiveOnline(_fallback = 0) {
+  const [online, setOnline] = useState(0);
   useEffect(() => {
-    const id = setInterval(() => {
-      setOnline((v) => {
-        const drift = Math.floor((Math.random() - 0.42) * 28);
-        return Math.max(3500, Math.min(7200, v + drift));
-      });
-    }, 2200);
-    return () => clearInterval(id);
-  }, [base]);
+    const controller = new AbortController();
+    const update = async () => {
+      try {
+        const response = await fetch("/api/server/status", { signal: controller.signal, headers: { Accept: "application/json" } });
+        const status = response.ok ? await response.json() : null;
+        setOnline(Number.isInteger(status?.players) ? status.players : 0);
+      } catch (error) {
+        if (!(error instanceof DOMException && error.name === "AbortError")) setOnline(0);
+      }
+    };
+    void update();
+    const id = window.setInterval(update, 15_000);
+    return () => { controller.abort(); window.clearInterval(id); };
+  }, []);
   return online;
 }
 
