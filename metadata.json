@@ -1,0 +1,8 @@
+{
+  "name": "MuOrigins S6E3 — Legends Never Die",
+  "description": "Authentic Season 6 Episode 3 classic MU Online private server website with 50x rates, Castle Siege, events, and registration.",
+  "permissions": [],
+  "capabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

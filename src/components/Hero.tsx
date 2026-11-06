@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { Play, Download, Users, ShieldCheck, Star, ChevronDown, Swords, Zap } from "lucide-react";
+import { Play, Download, ShieldCheck, ChevronDown, Swords, Zap } from "lucide-react";
 import { useLiveOnline } from "../hooks/hooks";
 import { useI18n } from "../i18n";
 
@@ -74,9 +74,9 @@ export default function Hero({ onRegister }: { onRegister: () => void }) {
     <section id="top" className="noise relative flex min-h-[100svh] items-center overflow-hidden pt-[130px] pb-16">
       <div className="absolute inset-0">
         <img src="/images/hero-lorencia.jpg" alt={h.heroAlt} className="h-full w-full scale-105 object-cover object-center" fetchPriority="high" />
-        <div className="absolute inset-0 bg-gradient-to-b from-[#05060f]/80 via-[#05060f]/55 to-[#05060f]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#090d16]/85 via-[#090d16]/60 to-[#090d16]" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_50%_at_50%_40%,rgba(139,92,246,.28),transparent_70%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_45%_35%_at_20%_70%,rgba(245,196,81,.14),transparent_70%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_45%_35%_at_20%_70%,rgba(212,175,55,.18),transparent_70%)]" />
         <div className="grid-bg absolute inset-0" />
       </div>
 
@@ -99,9 +99,6 @@ export default function Hero({ onRegister }: { onRegister: () => void }) {
                 </span>
                 <span className="font-mono text-emerald-300 tabular-nums">{online.toLocaleString(t.locale)} {h.online}</span>
               </span>
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/30 bg-amber-400/10 px-4 py-1.5 text-xs font-bold tracking-wide text-amber-200">
-                <Star className="h-3.5 w-3.5 fill-amber-300 text-amber-300" /> {h.rating}
-              </span>
             </div>
 
             <h1 key={lang} className="hero-title font-display mt-6 text-[2.15rem] leading-[1.05] font-black tracking-tight break-words text-white sm:text-5xl xl:text-[4.2rem]">
@@ -117,20 +114,30 @@ export default function Hero({ onRegister }: { onRegister: () => void }) {
             </p>
 
             <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center lg:justify-start">
-              <button
+              <a
+                href="#register"
                 onClick={onRegister}
-                className="btn-shine group flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#f5c451] via-[#ffb52e] to-[#ff8a3c] px-8 py-4 text-base font-extrabold text-[#1a1200] shadow-[0_18px_50px_-12px_rgba(245,196,81,.6)] transition hover:scale-[1.02] hover:shadow-[0_22px_60px_-10px_rgba(245,196,81,.7)] active:scale-[.98] sm:w-auto"
+                className="btn-shine group flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#d4af37] via-[#ffb52e] to-[#ff8a3c] px-7 py-4 text-base font-extrabold text-[#090d16] shadow-[0_18px_50px_-12px_rgba(212,175,55,.6)] transition hover:scale-[1.02] hover:shadow-[0_22px_60px_-10px_rgba(212,175,55,.7)] active:scale-[.98] sm:w-auto"
               >
                 <Zap className="h-5 w-5 transition group-hover:rotate-12" />
                 {h.ctaRegister}
-              </button>
+              </a>
               <a
                 href="#download"
-                className="glass group flex w-full items-center justify-center gap-2 rounded-2xl px-8 py-4 text-base font-bold text-white transition hover:border-white/25 hover:bg-white/10 active:scale-[.98] sm:w-auto"
+                className="glass group flex w-full items-center justify-center gap-2 rounded-2xl px-7 py-4 text-base font-bold text-white transition hover:border-white/25 hover:bg-white/10 active:scale-[.98] sm:w-auto"
               >
                 <Download className="h-5 w-5 transition group-hover:translate-y-0.5" />
                 {h.ctaDownload}
                 <span className="rounded-md bg-white/10 px-1.5 py-0.5 font-mono text-[10px] text-white/60">2.1GB</span>
+              </a>
+              <a
+                href="https://webshop.muorigins.online"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="glass border-amber-400/40 text-amber-300 group flex w-full items-center justify-center gap-2 rounded-2xl px-5 py-4 text-sm font-bold transition hover:bg-amber-400/10 hover:text-white sm:w-auto"
+              >
+                <span>Web Shop</span>
+                <span className="text-xs">↗</span>
               </a>
             </div>
 
@@ -191,34 +198,14 @@ export default function Hero({ onRegister }: { onRegister: () => void }) {
                 ))}
               </div>
 
-              <div className="mt-5 rounded-2xl border border-amber-400/20 bg-gradient-to-br from-amber-400/12 to-orange-500/8 p-4">
-                <div className="flex items-center gap-3">
-                  <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-amber-300 to-orange-500 text-xl shadow-lg shadow-amber-500/30">🎁</div>
-                  <div>
-                    <p className="text-sm font-bold text-amber-100">{h.kitTitle}</p>
-                    <p className="text-xs text-amber-100/60">{h.kitDesc}</p>
-                  </div>
-                  <Users className="ml-auto h-5 w-5 shrink-0 text-amber-300/60" />
-                </div>
-                <button onClick={onRegister} className="btn-shine mt-3 w-full rounded-xl bg-white px-4 py-2.5 text-sm font-extrabold text-[#1a1200] transition hover:brightness-110 active:scale-[.98]">
-                  {h.kitCta}
-                </button>
-              </div>
+              <a
+                href="#register"
+                className="btn-shine mt-5 block w-full rounded-xl bg-gradient-to-r from-[#d4af37] via-[#ffb52e] to-[#ff8a3c] py-3 text-center text-sm font-extrabold text-[#090d16] shadow-lg shadow-amber-500/20 transition hover:brightness-110 active:scale-[.98]"
+              >
+                {h.ctaRegister}
+              </a>
 
               <p className="mt-4 text-center font-mono text-[11px] text-white/35">{h.ping}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-14 hidden items-center gap-4 md:flex" aria-label={h.hofAria}>
-          <span className="shrink-0 font-mono text-[11px] tracking-[0.25em] text-white/40">{h.hof}</span>
-          <div className="relative flex-1 overflow-hidden [mask-image:linear-gradient(90deg,transparent,black_8%,black_92%,transparent)]">
-            <div className="animate-marquee flex w-max gap-3">
-              {[0, 1].flatMap((k) =>
-                h.guilds.map((g, i) => (
-                  <span key={`${k}-${i}`} className="glass shrink-0 rounded-full px-5 py-2 text-sm font-semibold whitespace-nowrap text-white/75">{g}</span>
-                ))
-              )}
             </div>
           </div>
         </div>
