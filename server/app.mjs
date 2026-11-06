@@ -101,13 +101,18 @@ async function status(response, config) {
   }
 }
 
-function staticFile(request, response) {
+export function resolveStaticFile(requestUrl) {
   let urlPath;
-  try { urlPath = decodeURIComponent(new URL(request.url, "http://localhost").pathname); }
-  catch { return json(response, 400, { error: "Invalid URL path." }); }
+  try { urlPath = decodeURIComponent(new URL(requestUrl, "http://localhost").pathname); }
+  catch { return null; }
   const candidate = resolve(root, normalize(urlPath).replace(/^[/\\]+/, ""));
   const insideRoot = candidate === root || candidate.startsWith(`${root}${sep}`);
-  const file = insideRoot && existsSync(candidate) && statSync(candidate).isFile() ? candidate : join(root, "index.html");
+  return insideRoot && existsSync(candidate) && statSync(candidate).isFile() ? candidate : join(root, "index.html");
+}
+
+function staticFile(request, response) {
+  const file = resolveStaticFile(request.url);
+  if (!file) return json(response, 400, { error: "Invalid URL path." });
   const extension = extname(file).toLowerCase();
   response.writeHead(200, { "Content-Type": mimeTypes.get(extension) ?? "application/octet-stream", "Cache-Control": extension === ".html" ? "no-cache" : "public, max-age=31536000, immutable" });
   if (request.method === "HEAD") return response.end();

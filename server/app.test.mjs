@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import { createServer } from "node:http";
+import { basename } from "node:path";
 import test from "node:test";
-import { createHandler, loadConfig, validateRegistration } from "./app.mjs";
+import { createHandler, loadConfig, resolveStaticFile, validateRegistration } from "./app.mjs";
 
 async function listen(handler) {
   const server = createServer(handler);
@@ -60,18 +61,9 @@ test("server status normalizes OpenMU's JSON-string response", async (context) =
   assert.equal("playersList" in body, false);
 });
 
-test("malformed and traversal-like static paths never escape the dist root", async (context) => {
-  const gateway = await listen(createHandler({ apiUrl: "https://openmu.invalid", apiKey: "x".repeat(32), trustProxy: false, requestTimeoutMs: 1000 }));
-  context.after(async () => {
-    gateway.server.closeIdleConnections();
-    await new Promise((resolve, reject) => gateway.server.close((error) => error ? reject(error) : resolve()));
-  });
-
-  const malformed = await fetch(`${gateway.url}/%E0%A4%A`);
-  assert.equal(malformed.status, 400);
-  await malformed.text();
-
-  const traversal = await fetch(`${gateway.url}/..%2Fserver%2Fapp.mjs`);
-  assert.equal(traversal.status, 200);
-  assert.doesNotMatch(await traversal.text(), /OPENMU_API_KEY|createHandler/);
+test("malformed and traversal-like static paths never escape the dist root", () => {
+  assert.equal(resolveStaticFile("/%E0%A4%A"), null);
+  const traversal = resolveStaticFile("/..%2Fserver%2Fapp.mjs");
+  assert.ok(traversal);
+  assert.equal(basename(traversal), "index.html");
 });
