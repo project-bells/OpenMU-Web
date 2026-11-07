@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Menu, X, Download, Gamepad2, ShoppingBag, ExternalLink, UserPlus, Trophy, Home, Zap, Swords, Coins } from "lucide-react";
+import { Menu, X, Download, Gamepad2, ShoppingBag, ExternalLink, UserPlus, Trophy, Home, Swords } from "lucide-react";
 import { useLiveOnline } from "../hooks/hooks";
 import { LangDropdown, LangGrid } from "./LangSwitcher";
 import { useI18n } from "../i18n";
@@ -93,21 +93,9 @@ export default function Navbar({ onRegister }: { onRegister: () => void }) {
               </a>
               <a
                 href="#rates"
-                className="rounded-lg px-3 py-2 text-sm font-bold whitespace-nowrap text-amber-300 transition hover:bg-amber-400/10 hover:text-white"
+                className="rounded-lg px-3 py-2 text-sm font-semibold whitespace-nowrap text-white/80 transition hover:bg-white/5 hover:text-white"
               >
-                <span className="flex items-center gap-1.5">
-                  <Zap className="h-3.5 w-3.5 text-amber-400" />
-                  <span>{lang === "th" ? "เรทเซิร์ฟเวอร์" : "Rates"}</span>
-                </span>
-              </a>
-              <a
-                href="#online-rewards"
-                className="rounded-lg px-3 py-2 text-sm font-bold whitespace-nowrap text-amber-300 transition hover:bg-amber-400/10 hover:text-white"
-              >
-                <span className="flex items-center gap-1.5">
-                  <Coins className="h-3.5 w-3.5 text-amber-400" />
-                  <span>{lang === "th" ? "ออนไลน์แลก WCoin" : "Online Rewards"}</span>
-                </span>
+                {lang === "th" ? "เรทเซิร์ฟเวอร์" : "Rates"}
               </a>
               <a
                 href="#ranking"
@@ -201,18 +189,9 @@ export default function Navbar({ onRegister }: { onRegister: () => void }) {
                 <a
                   href="#rates"
                   onClick={() => setOpen(false)}
-                  className="flex items-center gap-2 rounded-xl bg-amber-400/10 border border-amber-400/25 px-3 py-2.5 text-sm font-bold text-amber-300 transition hover:bg-amber-400/20"
+                  className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold text-white/80 transition hover:bg-white/5 hover:text-white"
                 >
-                  <Zap className="h-4 w-4 text-amber-400" />
                   <span>{lang === "th" ? "เรทเซิร์ฟเวอร์ (EXP & Drop Rates)" : "Server Rates & Formula"}</span>
-                </a>
-                <a
-                  href="#online-rewards"
-                  onClick={() => setOpen(false)}
-                  className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500/20 to-purple-600/20 border border-amber-400/35 px-3 py-2.5 text-sm font-bold text-amber-300 transition hover:bg-amber-400/25"
-                >
-                  <Coins className="h-4 w-4 text-amber-400" />
-                  <span>{lang === "th" ? "ออนไลน์แลกเครดิต & WCoin ฟรี" : "Online Rewards (Earn WCoin)"}</span>
                 </a>
                 <a
                   href="#ranking"
