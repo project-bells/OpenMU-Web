@@ -2,6 +2,7 @@ export interface RegisterPayload {
   loginName: string;
   password: string;
   email: string;
+  personalCode?: string;
 }
 
 export interface RegisterResponse {
@@ -9,6 +10,7 @@ export interface RegisterResponse {
   message?: string;
   error?: string;
   account?: string;
+  isSimulated?: boolean;
 }
 
 export interface ServerStatus {

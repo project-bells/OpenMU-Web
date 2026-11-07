@@ -130,6 +130,7 @@ export function createHandler(config) {
     }
     if (pathname === "/api/account/register") return register(request, response, config);
     if (pathname === "/api/server/status" && request.method === "GET") return status(response, config);
+    if (pathname.startsWith("/api/")) return json(response, 404, { error: "Not found." });
     if (request.method === "GET" || request.method === "HEAD") return staticFile(request, response);
     return json(response, 404, { error: "Not found." });
   };

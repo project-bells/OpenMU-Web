@@ -1,5 +1,14 @@
 import { createServer } from "node:http";
+import { existsSync } from "node:fs";
 import { createHandler, loadConfig } from "./app.mjs";
+
+if (typeof process.loadEnvFile === "function" && existsSync(".env")) {
+  try {
+    process.loadEnvFile(".env");
+  } catch {
+    // ignore if unreadable
+  }
+}
 
 try {
   const config = loadConfig();

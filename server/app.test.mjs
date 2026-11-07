@@ -67,3 +67,14 @@ test("malformed and traversal-like static paths never escape the dist root", () 
   assert.ok(traversal);
   assert.equal(basename(traversal), "index.html");
 });
+
+test("unhandled api paths return 404 JSON instead of HTML fallback", async (context) => {
+  const gateway = await listen(createHandler({ apiUrl: "http://127.0.0.1:9", apiKey: "x".repeat(32), trustProxy: false, requestTimeoutMs: 1000 }));
+  context.after(() => { gateway.server.close(); });
+
+  const result = await fetch(`${gateway.url}/api/rankings/characters`);
+  assert.equal(result.status, 404);
+  assert.equal(result.headers.get("content-type"), "application/json; charset=utf-8");
+  const body = await result.json();
+  assert.deepEqual(body, { error: "Not found." });
+});
