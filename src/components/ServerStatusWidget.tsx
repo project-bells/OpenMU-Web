@@ -7,7 +7,7 @@ export default function ServerStatusWidget() {
   const { lang } = useI18n();
   const [nowUtc7, setNowUtc7] = useState<string>("");
   const [siegeCountdown, setSiegeCountdown] = useState<string>("");
-  const [onlineCount, setOnlineCount] = useState<number>(4892);
+  const [onlineCount, setOnlineCount] = useState<number>(0);
   const [serverData, setServerData] = useState<ServerStatusData | null>(null);
 
   // Fetch live server database status
@@ -69,17 +69,7 @@ export default function ServerStatusWidget() {
     return () => clearInterval(interval);
   }, []);
 
-  // Subtle realistic online count fluctuation
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setOnlineCount((prev) => {
-        const delta = Math.floor(Math.random() * 5) - 2; // -2 to +2
-        const next = prev + delta;
-        return next < 4820 ? 4830 : next > 4950 ? 4940 : next;
-      });
-    }, 4500);
-    return () => clearInterval(interval);
-  }, []);
+  const maxCapacity = serverData?.realms?.reduce((acc, r) => acc + (r.max || 0), 0) || 0;
 
   return (
     <section className="relative z-10 mx-auto max-w-7xl px-4 pt-2 pb-6 sm:px-6">
@@ -120,14 +110,20 @@ export default function ServerStatusWidget() {
                 <span className="font-mono text-lg font-black tracking-tight text-white tabular-nums">
                   {onlineCount.toLocaleString()}
                 </span>
-                <span className="rounded bg-emerald-500/20 px-1.5 py-0.2 text-[10px] font-bold text-emerald-300">
-                  PEAK 6.5K
+                <span className="rounded bg-emerald-500/20 px-1.5 py-0.5 text-[10px] font-bold text-emerald-300">
+                  {maxCapacity > 0 ? `MAX ${(maxCapacity >= 1000 ? (maxCapacity / 1000).toFixed(1) + "K" : maxCapacity)}` : (serverData?.status === "ONLINE" ? "ONLINE" : "OFFLINE")}
                 </span>
               </div>
-              <p className="mt-0.5 text-xs text-white/50">Warriors Online Across Realms</p>
+              <p className="mt-0.5 text-xs text-white/50">{lang === "th" ? "ผู้เล่นออนไลน์รวมทุกห้อง" : "Warriors Online Across Realms"}</p>
               <div className="mt-1 flex items-center gap-1.5 text-[11px] text-white/40">
-                <Wifi className="h-3 w-3 text-emerald-400" />
-                <span>99.98% Server SLA Uptime</span>
+                <Wifi className={`h-3 w-3 ${serverData?.status === "ONLINE" ? "text-emerald-400" : "text-rose-400"}`} />
+                <span>
+                  {serverData?.uptime
+                    ? `${lang === "th" ? "ออนไลน์ต่อเนื่อง" : "Uptime"}: ${serverData.uptime}`
+                    : serverData?.status === "ONLINE"
+                      ? "Server Online & Stable"
+                      : (lang === "th" ? "เซิร์ฟเวอร์ออฟไลน์" : "Server Offline")}
+                </span>
               </div>
             </div>
           </div>
@@ -160,14 +156,14 @@ export default function ServerStatusWidget() {
             <div className="min-w-0">
               <div className="flex items-center gap-2">
                 <span className="font-display text-sm font-bold text-white">
-                  {lang === "th" ? "ระบบป้องกันโปร" : "MHP GameGuard"}
+                  Origins GameGuard
                 </span>
                 <span className="rounded bg-emerald-500/15 border border-emerald-500/30 px-1.5 py-0.5 text-[10px] font-bold text-emerald-400">
-                  {lang === "th" ? "เปิดทำงาน" : "ACTIVE"}
+                  ACTIVE
                 </span>
               </div>
               <p className="mt-0.5 text-xs text-white/50 truncate">
-                {serverData?.antiCheat || (lang === "th" ? "ป้องกัน Speedhack & DLL Injection 100%" : "Memory Guard & Anti-Speedhack")}
+                Memory Guard & Anti-Speedhack
               </p>
               <div className="mt-1 flex items-center gap-1.5 text-[11px] text-emerald-400">
                 <Lock className="h-3 w-3" />

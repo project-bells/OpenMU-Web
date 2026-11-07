@@ -23,7 +23,7 @@ export default function DownloadSection() {
           </h2>
           <p className="mt-2 text-sm text-white/60 sm:text-base">
             {lang === "th"
-              ? "ตัวเกมสมบูรณ์แบบ พร้อมตัวอัปเดตอัตโนมัติ และระบบป้องกันโปร MHP GameGuard"
+              ? "ตัวเกมสมบูรณ์แบบ พร้อมตัวอัปเดตอัตโนมัติ และระบบป้องกันโปร Origins GameGuard"
               : "Clean client, auto-updating launcher, built-in anti-cheat guard. Ready to play in under 5 minutes."}
           </p>
         </div>
@@ -47,8 +47,8 @@ export default function DownloadSection() {
               </h3>
               <p className="mt-2 text-sm text-white/70 leading-relaxed">
                 {lang === "th"
-                  ? "ตัวเกม Season 6 Episode 3 ของแท้สมบูรณ์แบบ เสียงคลาสสิกครบ ภาพ HD รองรับจอ Widescreen และมีระบบกันโปร MHP GameGuard ในตัว เลือกช่องทางดาวน์โหลดด้านขวา:"
-                  : "Complete Season 6 Episode 3 client. Includes authentic sound packs, HD textures, widescreen support, and built-in MHP GameGuard. Choose your preferred download mirror below:"}
+                  ? "ตัวเกม Season 6 Episode 3 ของแท้สมบูรณ์แบบ เสียงคลาสสิกครบ ภาพ HD รองรับจอ Widescreen และมีระบบกันโปร Origins GameGuard ในตัว เลือกช่องทางดาวน์โหลดด้านขวา:"
+                  : "Complete Season 6 Episode 3 client. Includes authentic sound packs, HD textures, widescreen support, and built-in Origins GameGuard. Choose your preferred download mirror below:"}
               </p>
 
               <div className="mt-4 flex flex-wrap items-center gap-4 text-xs font-mono text-white/60">
@@ -216,8 +216,8 @@ export default function DownloadSection() {
                 {lang === "th" ? "ข้อแนะนำเรื่อง Antivirus / Windows Defender:" : "Antivirus & Windows Defender False Positive Notice:"}
               </strong>
               {lang === "th"
-                ? "เนื่องจากตัวเกมมีระบบป้องกันการแก้ไขหน่วยความจำ (MHP Anti-Cheat Guard) โปรแกรม Antivirus บางตัวอาจเข้าใจผิดว่าเป็นภัยคุกคาม (False Positive) ทีมงานขอรับรองว่าไฟล์ตัวเกมปลอดภัย 100% ปราศจากไวรัส หากพบปัญหาเกมไม่รัน กรุณาเพิ่มโฟลเดอร์เกมเข้าในข้อยกเว้น (Exclusion/Whitelist)"
-                : "Due to our proprietary Anti-Cheat protection (MHP GameGuard / Main.exe packer) designed to prevent memory injection and speedhacks, some antivirus scanners may report a false positive. We guarantee our game files are 100% clean, virus-free, and safe. Please add the MuOrigins game folder to your Antivirus Exclusions list if the game fails to launch."}
+                ? "เนื่องจากตัวเกมมีระบบป้องกันการแก้ไขหน่วยความจำ (Origins GameGuard) โปรแกรม Antivirus บางตัวอาจเข้าใจผิดว่าเป็นภัยคุกคาม (False Positive) ทีมงานขอรับรองว่าไฟล์ตัวเกมปลอดภัย 100% ปราศจากไวรัส หากพบปัญหาเกมไม่รัน กรุณาเพิ่มโฟลเดอร์เกมเข้าในข้อยกเว้น (Exclusion/Whitelist)"
+                : "Due to our proprietary Anti-Cheat protection (Origins GameGuard / Main.exe packer) designed to prevent memory injection and speedhacks, some antivirus scanners may report a false positive. We guarantee our game files are 100% clean, virus-free, and safe. Please add the MuOrigins game folder to your Antivirus Exclusions list if the game fails to launch."}
             </div>
           </div>
         </div>

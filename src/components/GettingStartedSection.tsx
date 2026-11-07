@@ -19,7 +19,7 @@ export default function GettingStartedSection({ onRegister }: { onRegister: () =
       badge: "2.1 GB Client",
       title: "Download Game Client",
       description:
-        "Fast cloud mirrors via Mega and MediaFire. Clean installer with auto-patcher and built-in MHP GameGuard anti-cheat protection. 100% VirusTotal verified.",
+        "Fast cloud mirrors via Mega and MediaFire. Clean installer with auto-patcher and built-in Origins GameGuard anti-cheat protection. 100% VirusTotal verified.",
       actionLabel: "Get Full Client",
       href: "#download",
       icon: Download,
@@ -128,7 +128,7 @@ export default function GettingStartedSection({ onRegister }: { onRegister: () =
         <div className="mt-10 flex flex-wrap items-center justify-center gap-6 text-xs text-white/50 border-t border-white/8 pt-8">
           <span className="flex items-center gap-2">
             <ShieldCheck className="h-4 w-4 text-emerald-400" />
-            <span>MHP GameGuard Anti-Cheat Protected</span>
+            <span>Origins GameGuard Anti-Cheat Protected</span>
           </span>
           <span>•</span>
           <span>Auto-Updating Patch Launcher</span>

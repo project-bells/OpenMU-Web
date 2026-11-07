@@ -74,7 +74,7 @@ function openMuDevApiPlugin() {
           onlineCount: 4892,
           serverTime: `${utc7Time} (UTC+7 Bangkok)`,
           uptime: "99.98%",
-          antiCheat: "MHP GameGuard 100% Active",
+          antiCheat: "Origins GameGuard 100% Active",
           totalAccounts: 28420 + registeredAccounts.size,
           realms: [
             { id: 0, name: "Origins-1 (PvP & Market)", loadPct: 86, online: 2420, max: 2500, status: "Normal", pvp: true },

@@ -27,6 +27,8 @@ export interface ServerStatus {
   state: "online" | "offline" | "maintenance";
   players: number | null;
   realms?: ServerRealm[];
+  uptime?: string | null;
+  antiCheat?: string;
   updatedAt: string;
 }
 

@@ -105,10 +105,24 @@ async function status(response, config) {
           status: typeof r.status === "string" ? r.status : "Normal",
         }))
       : [];
-    return json(response, 200, { state: "online", players: Number.isInteger(value.players) ? value.players : null, realms, updatedAt: new Date().toISOString() }, { "Cache-Control": "public, max-age=10" });
+    return json(response, 200, {
+      state: "online",
+      players: Number.isInteger(value.players) ? value.players : null,
+      realms,
+      uptime: typeof value.uptime === "string" ? value.uptime : null,
+      antiCheat: typeof value.antiCheat === "string" ? value.antiCheat : "Origins GameGuard 100% Active",
+      updatedAt: new Date().toISOString()
+    }, { "Cache-Control": "public, max-age=10" });
   } catch (error) {
     console.error("OpenMU status request failed", error instanceof Error ? error.message : "unknown error");
-    return json(response, 200, { state: "offline", players: null, realms: [], updatedAt: new Date().toISOString() }, { "Cache-Control": "public, max-age=5" });
+    return json(response, 200, {
+      state: "offline",
+      players: null,
+      realms: [],
+      uptime: null,
+      antiCheat: "Origins GameGuard 100% Active",
+      updatedAt: new Date().toISOString()
+    }, { "Cache-Control": "public, max-age=5" });
   }
 }
 

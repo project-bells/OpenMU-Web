@@ -103,7 +103,7 @@ export async function fetchServerStatus(): Promise<ServerStatusData> {
           onlineCount,
           serverTime: `${utc7} (UTC+7 Bangkok)`,
           uptime: data.uptime || "99.98%",
-          antiCheat: data.antiCheat || "MHP GameGuard 100% Active",
+          antiCheat: data.antiCheat || "Origins GameGuard 100% Active",
           totalAccounts: data.totalAccounts || 28420,
           realms,
           onlineExchange: data.onlineExchange || {
@@ -128,7 +128,7 @@ export async function fetchServerStatus(): Promise<ServerStatusData> {
     onlineCount: 4892,
     serverTime: `${utc7} (UTC+7 Bangkok)`,
     uptime: "99.98%",
-    antiCheat: "MHP GameGuard 100% Active",
+    antiCheat: "Origins GameGuard 100% Active",
     totalAccounts: 28420,
     realms: [
       { name: "Origins-1 (PvP & Market)", loadPct: 86, online: 2420, max: 2500, status: "Normal", pvp: true },
