@@ -75,11 +75,44 @@ test("malformed and traversal-like static paths never escape the dist root", () 
   assert.equal(basename(traversal), "index.html");
 });
 
+test("character and guild rankings proxy to OpenMU and return data", async (context) => {
+  const upstream = await listen((request, response) => {
+    response.writeHead(200, { "Content-Type": "application/json" });
+    if (request.url.startsWith("/api/rankings/characters")) {
+      response.end(JSON.stringify({
+        total: 1,
+        characters: [{ rank: 1, name: "Hero", classId: "dk", className: "Blade Master", classShort: "DK", level: 400, masterLevel: 250, resets: 98, grandResets: 3, guild: "ORIGINS", isOnline: true }]
+      }));
+    } else if (request.url.startsWith("/api/rankings/guilds")) {
+      response.end(JSON.stringify({
+        total: 1,
+        guilds: [{ rank: 1, name: "ORIGINS", master: "Hero", score: 12000, totalResets: 350, members: "25/40", siegeStatus: "Castle Lord" }]
+      }));
+    } else {
+      response.writeHead(404).end();
+    }
+  });
+  const gateway = await listen(createHandler({ apiUrl: upstream.url, apiKey: "x".repeat(32), trustProxy: false, requestTimeoutMs: 1000 }));
+  context.after(() => { gateway.server.close(); upstream.server.close(); });
+
+  const charsRes = await fetch(`${gateway.url}/api/rankings/characters?search=Hero&class=DK`);
+  assert.equal(charsRes.status, 200);
+  const charsBody = await charsRes.json();
+  assert.equal(charsBody.total, 1);
+  assert.equal(charsBody.characters[0].name, "Hero");
+
+  const guildsRes = await fetch(`${gateway.url}/api/rankings/guilds?search=ORIGINS`);
+  assert.equal(guildsRes.status, 200);
+  const guildsBody = await guildsRes.json();
+  assert.equal(guildsBody.total, 1);
+  assert.equal(guildsBody.guilds[0].name, "ORIGINS");
+});
+
 test("unhandled api paths return 404 JSON instead of HTML fallback", async (context) => {
   const gateway = await listen(createHandler({ apiUrl: "http://127.0.0.1:9", apiKey: "x".repeat(32), trustProxy: false, requestTimeoutMs: 1000 }));
   context.after(() => { gateway.server.close(); });
 
-  const result = await fetch(`${gateway.url}/api/rankings/characters`);
+  const result = await fetch(`${gateway.url}/api/nonexistent`);
   assert.equal(result.status, 404);
   assert.equal(result.headers.get("content-type"), "application/json; charset=utf-8");
   const body = await result.json();

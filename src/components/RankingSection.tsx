@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { Trophy, Shield, Search, ChevronLeft, ChevronRight, Crown, Filter, RefreshCw } from "lucide-react";
-import { CharacterRankItem, GuildRankItem, MOCK_CHARACTERS, MOCK_GUILDS } from "../data";
+import { CharacterRankItem, GuildRankItem } from "../data";
 import { useI18n } from "../i18n";
 import { fetchCharacterRankings, fetchGuildRankings } from "../services/dbApi";
 
@@ -21,8 +21,8 @@ export default function RankingSection() {
   const [selectedClass, setSelectedClass] = useState<string>("ALL");
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
-  const [characters, setCharacters] = useState<CharacterRankItem[]>(MOCK_CHARACTERS);
-  const [guilds, setGuilds] = useState<GuildRankItem[]>(MOCK_GUILDS);
+  const [characters, setCharacters] = useState<CharacterRankItem[]>([]);
+  const [guilds, setGuilds] = useState<GuildRankItem[]>([]);
   const pageSize = 10;
 
   // Load from database API
@@ -247,10 +247,21 @@ export default function RankingSection() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/5 font-medium">
-                  {paginatedCharacters.length === 0 ? (
+                  {isLoading ? (
+                    <tr>
+                      <td colSpan={7} className="py-12 text-center text-sm text-white/50">
+                        <div className="flex items-center justify-center gap-2">
+                          <RefreshCw className="h-4 w-4 animate-spin text-amber-400" />
+                          <span>{lang === "th" ? "กำลังโหลดอันดับจากเซิร์ฟเวอร์…" : "Loading rankings from server…"}</span>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : paginatedCharacters.length === 0 ? (
                     <tr>
                       <td colSpan={7} className="py-12 text-center text-sm text-white/40">
-                        No characters found matching "{searchQuery}"
+                        {searchQuery
+                          ? (lang === "th" ? `ไม่พบตัวละครที่ตรงกับ "${searchQuery}"` : `No characters found matching "${searchQuery}"`)
+                          : (lang === "th" ? "ยังไม่มีข้อมูลตัวละครจากเซิร์ฟเวอร์" : "No characters found on server")}
                       </td>
                     </tr>
                   ) : (
@@ -347,10 +358,21 @@ export default function RankingSection() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/5 font-medium">
-                  {paginatedGuilds.length === 0 ? (
+                  {isLoading ? (
+                    <tr>
+                      <td colSpan={7} className="py-12 text-center text-sm text-white/50">
+                        <div className="flex items-center justify-center gap-2">
+                          <RefreshCw className="h-4 w-4 animate-spin text-amber-400" />
+                          <span>{lang === "th" ? "กำลังโหลดอันดับจากเซิร์ฟเวอร์…" : "Loading rankings from server…"}</span>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : paginatedGuilds.length === 0 ? (
                     <tr>
                       <td colSpan={7} className="py-12 text-center text-sm text-white/40">
-                        No guilds found matching "{searchQuery}"
+                        {searchQuery
+                          ? (lang === "th" ? `ไม่พบกิลด์ที่ตรงกับ "${searchQuery}"` : `No guilds found matching "${searchQuery}"`)
+                          : (lang === "th" ? "ยังไม่มีข้อมูลกิลด์จากเซิร์ฟเวอร์" : "No guilds found on server")}
                       </td>
                     </tr>
                   ) : (

@@ -1,4 +1,4 @@
-import { CharacterRankItem, GuildRankItem, MOCK_CHARACTERS, MOCK_GUILDS } from "../data";
+import { CharacterRankItem, GuildRankItem } from "../data";
 
 export interface RealmData {
   id?: number;
@@ -146,7 +146,7 @@ export async function fetchServerStatus(): Promise<ServerStatusData> {
 }
 
 /**
- * Fetch live Character Rankings from server database
+ * Fetch live Character Rankings directly from server database only
  */
 export async function fetchCharacterRankings(search = "", classFilter = "ALL"): Promise<CharacterRankItem[]> {
   try {
@@ -162,19 +162,14 @@ export async function fetchCharacterRankings(search = "", classFilter = "ALL"): 
       }
     }
   } catch {
-    // Network fallback
+    // Network or server offline
   }
 
-  // Local fallback
-  return MOCK_CHARACTERS.filter((c) => {
-    const matchQuery = !search || c.name.toLowerCase().includes(search.toLowerCase()) || c.guild.toLowerCase().includes(search.toLowerCase());
-    const matchClass = classFilter === "ALL" || c.classShort === classFilter;
-    return matchQuery && matchClass;
-  });
+  return [];
 }
 
 /**
- * Fetch live Guild Rankings from server database
+ * Fetch live Guild Rankings directly from server database only
  */
 export async function fetchGuildRankings(search = ""): Promise<GuildRankItem[]> {
   try {
@@ -189,12 +184,10 @@ export async function fetchGuildRankings(search = ""): Promise<GuildRankItem[]> 
       }
     }
   } catch {
-    // Network fallback
+    // Network or server offline
   }
 
-  return MOCK_GUILDS.filter((g) => {
-    return !search || g.name.toLowerCase().includes(search.toLowerCase()) || g.master.toLowerCase().includes(search.toLowerCase());
-  });
+  return [];
 }
 
 /**

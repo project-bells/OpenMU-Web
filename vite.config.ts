@@ -12,51 +12,27 @@ function openMuDevApiPlugin() {
   const ipRateMap = new Map<string, { count: number; resetTime: number }>();
   const MAX_BODY_BYTES = 10 * 1024; // 10KB limit
 
-  // In-memory Character & Guild Database for OpenMU Dev Server
-  const charactersDb = [
-    { rank: 1, name: "xX_Khaos_Xx", classId: "dk", className: "Blade Master", classShort: "DK", level: 400, masterLevel: 250, resets: 98, grandResets: 4, guild: "VENDETTA", isOnline: true },
-    { rank: 2, name: "SoulReaper", classId: "dw", className: "Grand Master", classShort: "DW", level: 400, masterLevel: 245, resets: 95, grandResets: 4, guild: "VENDETTA", isOnline: true },
-    { rank: 3, name: "QueenElf", classId: "elf", className: "High Elf", classShort: "ELF", level: 400, masterLevel: 240, resets: 93, grandResets: 3, guild: "IronGuard", isOnline: true },
-    { rank: 4, name: "LordViper", classId: "dl", className: "Lord Emperor", classShort: "DL", level: 400, masterLevel: 238, resets: 91, grandResets: 3, guild: "VENDETTA", isOnline: false },
-    { rank: 5, name: "ComboMaster", classId: "dk", className: "Blade Master", classShort: "DK", level: 400, masterLevel: 230, resets: 89, grandResets: 3, guild: "Nemesis", isOnline: true },
-    { rank: 6, name: "StormBringer", classId: "mg", className: "Duel Master", classShort: "MG", level: 400, masterLevel: 228, resets: 87, grandResets: 3, guild: "Immortals", isOnline: false },
-    { rank: 7, name: "DarkIllusion", classId: "dw", className: "Grand Master", classShort: "DW", level: 400, masterLevel: 225, resets: 86, grandResets: 2, guild: "OldSchool", isOnline: true },
-    { rank: 8, name: "FistOfDoom", classId: "rf", className: "Fist Master", classShort: "RF", level: 400, masterLevel: 220, resets: 84, grandResets: 2, guild: "Nemesis", isOnline: true },
-    { rank: 9, name: "BloodCurse", classId: "sum", className: "Dimension Master", classShort: "SUM", level: 400, masterLevel: 218, resets: 82, grandResets: 2, guild: "IronGuard", isOnline: false },
-    { rank: 10, name: "ArchangelDK", classId: "dk", className: "Blade Master", classShort: "DK", level: 400, masterLevel: 215, resets: 80, grandResets: 2, guild: "Phoenix", isOnline: true },
-    { rank: 11, name: "LunarGoddess", classId: "elf", className: "High Elf", classShort: "ELF", level: 400, masterLevel: 210, resets: 79, grandResets: 2, guild: "OldSchool", isOnline: true },
-    { rank: 12, name: "TitanLord", classId: "dl", className: "Lord Emperor", classShort: "DL", level: 400, masterLevel: 205, resets: 77, grandResets: 2, guild: "Immortals", isOnline: false },
-    { rank: 13, name: "NovaIgnite", classId: "dw", className: "Grand Master", classShort: "DW", level: 400, masterLevel: 200, resets: 75, grandResets: 1, guild: "Phoenix", isOnline: true },
-    { rank: 14, name: "BladeStorm", classId: "mg", className: "Duel Master", classShort: "MG", level: 400, masterLevel: 198, resets: 74, grandResets: 1, guild: "AfterLife", isOnline: false },
-    { rank: 15, name: "IronKnuckle", classId: "rf", className: "Fist Master", classShort: "RF", level: 400, masterLevel: 195, resets: 72, grandResets: 1, guild: "Reborn", isOnline: true },
-    { rank: 16, name: "HexWeaver", classId: "sum", className: "Dimension Master", classShort: "SUM", level: 400, masterLevel: 190, resets: 70, grandResets: 1, guild: "AfterLife", isOnline: false },
-    { rank: 17, name: "DragonSlayer", classId: "dk", className: "Blade Master", classShort: "DK", level: 400, masterLevel: 185, resets: 68, grandResets: 1, guild: "Genesis", isOnline: true },
-    { rank: 18, name: "StarGazer", classId: "elf", className: "High Elf", classShort: "ELF", level: 400, masterLevel: 180, resets: 66, grandResets: 1, guild: "DragonHeart", isOnline: true },
-    { rank: 19, name: "AbyssWalker", classId: "dl", className: "Lord Emperor", classShort: "DL", level: 400, masterLevel: 175, resets: 65, grandResets: 1, guild: "Genesis", isOnline: false },
-    { rank: 20, name: "ThunderSlash", classId: "mg", className: "Duel Master", classShort: "MG", level: 400, masterLevel: 170, resets: 63, grandResets: 1, guild: "DragonHeart", isOnline: true },
-  ];
-
-  const guildsDb = [
-    { rank: 1, name: "VENDETTA", master: "LordViper", score: 58420, totalResets: 1480, members: "39/40", siegeStatus: "Castle Lord" },
-    { rank: 2, name: "IronGuard", master: "QueenElf", score: 51200, totalResets: 1290, members: "38/40", siegeStatus: "Challenger" },
-    { rank: 3, name: "Nemesis", master: "ComboMaster", score: 47800, totalResets: 1180, members: "40/40", siegeStatus: "Challenger" },
-    { rank: 4, name: "Immortals", master: "StormBringer", score: 42300, totalResets: 1040, members: "37/40", siegeStatus: "Alliance" },
-    { rank: 5, name: "OldSchool", master: "DarkIllusion", score: 38900, totalResets: 960, members: "36/40", siegeStatus: "Alliance" },
-    { rank: 6, name: "Phoenix", master: "ArchangelDK", score: 35100, totalResets: 890, members: "35/40", siegeStatus: "Alliance" },
-    { rank: 7, name: "AfterLife", master: "BladeStorm", score: 31400, totalResets: 810, members: "34/40", siegeStatus: "Alliance" },
-    { rank: 8, name: "Reborn", master: "IronKnuckle", score: 28600, totalResets: 740, members: "32/40", siegeStatus: "Alliance" },
-    { rank: 9, name: "Genesis", master: "DragonSlayer", score: 25400, totalResets: 690, members: "30/40", siegeStatus: "Alliance" },
-    { rank: 10, name: "DragonHeart", master: "StarGazer", score: 22100, totalResets: 620, members: "28/40", siegeStatus: "Alliance" },
-  ];
-
   return {
     name: "openmu-dev-api",
     configureServer(server: any) {
-      // 1. Live Server Status API
-      server.middlewares.use("/api/server/status", (_req: any, res: any) => {
+      // 1. Live Server Status API (proxied to server gateway)
+      server.middlewares.use("/api/server/status", async (req: any, res: any) => {
         res.setHeader("X-Content-Type-Options", "nosniff");
         res.setHeader("Content-Type", "application/json");
         res.setHeader("Cache-Control", "no-cache");
+
+        const targetBase = process.env.OPENMU_GATEWAY_URL || "http://127.0.0.1:8080";
+        try {
+          const upstreamRes = await fetch(`${targetBase}${req.originalUrl || req.url}`);
+          if (upstreamRes.ok) {
+            const data = await upstreamRes.json();
+            res.statusCode = 200;
+            res.end(JSON.stringify(data));
+            return;
+          }
+        } catch {
+          // Fallback if gateway not running
+        }
 
         const now = new Date();
         const utc7Time = new Intl.DateTimeFormat("en-GB", {
@@ -71,19 +47,15 @@ function openMuDevApiPlugin() {
           serverName: "MuOrigins S6E3",
           version: "Season 6 Episode 3",
           status: "ONLINE",
-          onlineCount: 4892,
+          onlineCount: 0,
           serverTime: `${utc7Time} (UTC+7 Bangkok)`,
-          uptime: "99.98%",
+          uptime: "0h 0m",
           antiCheat: "Origins GameGuard 100% Active",
-          totalAccounts: 28420 + registeredAccounts.size,
-          realms: [
-            { id: 0, name: "Origins-1 (PvP & Market)", loadPct: 86, online: 2420, max: 2500, status: "Normal", pvp: true },
-            { id: 1, name: "Origins-2 (Non-PvP)", loadPct: 62, online: 1680, max: 2500, status: "Normal", pvp: false },
-            { id: 2, name: "Origins-3 (Sub-Server)", loadPct: 41, online: 792, max: 2000, status: "Normal", pvp: true },
-          ],
+          totalAccounts: registeredAccounts.size,
+          realms: [],
           onlineExchange: {
             creditsPerHour: 10,
-            creditToWcoinRatio: 0.5, // 100 credits = 50 WCoin
+            creditToWcoinRatio: 0.5,
             ratioDescription: "100 Credits = 50 WCoin",
             minExchange: 100,
             status: "ACTIVE",
@@ -94,41 +66,50 @@ function openMuDevApiPlugin() {
         res.end(JSON.stringify(data));
       });
 
-      // 2. Rankings Characters API
-      server.middlewares.use("/api/rankings/characters", (req: any, res: any) => {
+      // 2. Rankings Characters API (proxied to server database only)
+      server.middlewares.use("/api/rankings/characters", async (req: any, res: any) => {
         res.setHeader("X-Content-Type-Options", "nosniff");
         res.setHeader("Content-Type", "application/json");
         res.setHeader("Cache-Control", "no-cache");
 
-        const url = new URL(req.url, "http://localhost");
-        const query = (url.searchParams.get("search") || "").toLowerCase();
-        const classFilter = url.searchParams.get("class") || "ALL";
-
-        let filtered = charactersDb.filter((c) => {
-          const matchQuery = !query || c.name.toLowerCase().includes(query) || c.guild.toLowerCase().includes(query);
-          const matchClass = classFilter === "ALL" || c.classShort === classFilter;
-          return matchQuery && matchClass;
-        });
+        const targetBase = process.env.OPENMU_GATEWAY_URL || "http://127.0.0.1:8080";
+        try {
+          const upstreamRes = await fetch(`${targetBase}${req.originalUrl || req.url}`);
+          if (upstreamRes.ok) {
+            const data = await upstreamRes.json();
+            res.statusCode = 200;
+            res.end(JSON.stringify(data));
+            return;
+          }
+        } catch {
+          // Upstream unavailable
+        }
 
         res.statusCode = 200;
-        res.end(JSON.stringify({ total: filtered.length, characters: filtered }));
+        res.end(JSON.stringify({ total: 0, characters: [] }));
       });
 
-      // 3. Rankings Guilds API
-      server.middlewares.use("/api/rankings/guilds", (req: any, res: any) => {
+      // 3. Rankings Guilds API (proxied to server database only)
+      server.middlewares.use("/api/rankings/guilds", async (req: any, res: any) => {
         res.setHeader("X-Content-Type-Options", "nosniff");
         res.setHeader("Content-Type", "application/json");
         res.setHeader("Cache-Control", "no-cache");
 
-        const url = new URL(req.url, "http://localhost");
-        const query = (url.searchParams.get("search") || "").toLowerCase();
-
-        let filtered = guildsDb.filter((g) => {
-          return !query || g.name.toLowerCase().includes(query) || g.master.toLowerCase().includes(query);
-        });
+        const targetBase = process.env.OPENMU_GATEWAY_URL || "http://127.0.0.1:8080";
+        try {
+          const upstreamRes = await fetch(`${targetBase}${req.originalUrl || req.url}`);
+          if (upstreamRes.ok) {
+            const data = await upstreamRes.json();
+            res.statusCode = 200;
+            res.end(JSON.stringify(data));
+            return;
+          }
+        } catch {
+          // Upstream unavailable
+        }
 
         res.statusCode = 200;
-        res.end(JSON.stringify({ total: filtered.length, guilds: filtered }));
+        res.end(JSON.stringify({ total: 0, guilds: [] }));
       });
 
       // 4. Online-to-Credit & WCoin Exchange System API

@@ -126,6 +126,36 @@ async function status(response, config) {
   }
 }
 
+async function rankingsCharacters(request, response, config) {
+  try {
+    const url = new URL(request.url, "http://localhost");
+    const query = url.searchParams.toString();
+    const result = await upstream(config, `/api/rankings/characters${query ? `?${query}` : ""}`);
+    if (!result.ok) throw new Error(`upstream rankings/characters ${result.status}`);
+    let value = await result.json();
+    if (typeof value === "string") value = JSON.parse(value);
+    return json(response, 200, value, { "Cache-Control": "public, max-age=5" });
+  } catch (error) {
+    console.error("OpenMU character rankings request failed", error instanceof Error ? error.message : "unknown error");
+    return json(response, 200, { total: 0, characters: [] }, { "Cache-Control": "public, max-age=3" });
+  }
+}
+
+async function rankingsGuilds(request, response, config) {
+  try {
+    const url = new URL(request.url, "http://localhost");
+    const query = url.searchParams.toString();
+    const result = await upstream(config, `/api/rankings/guilds${query ? `?${query}` : ""}`);
+    if (!result.ok) throw new Error(`upstream rankings/guilds ${result.status}`);
+    let value = await result.json();
+    if (typeof value === "string") value = JSON.parse(value);
+    return json(response, 200, value, { "Cache-Control": "public, max-age=5" });
+  } catch (error) {
+    console.error("OpenMU guild rankings request failed", error instanceof Error ? error.message : "unknown error");
+    return json(response, 200, { total: 0, guilds: [] }, { "Cache-Control": "public, max-age=3" });
+  }
+}
+
 export function resolveStaticFile(requestUrl) {
   let urlPath;
   try { urlPath = decodeURIComponent(new URL(requestUrl, "http://localhost").pathname); }
@@ -155,6 +185,8 @@ export function createHandler(config) {
     }
     if (pathname === "/api/account/register") return register(request, response, config);
     if (pathname === "/api/server/status" && request.method === "GET") return status(response, config);
+    if (pathname === "/api/rankings/characters" && request.method === "GET") return rankingsCharacters(request, response, config);
+    if (pathname === "/api/rankings/guilds" && request.method === "GET") return rankingsGuilds(request, response, config);
     if (pathname.startsWith("/api/")) return json(response, 404, { error: "Not found." });
     if (request.method === "GET" || request.method === "HEAD") return staticFile(request, response);
     return json(response, 404, { error: "Not found." });
