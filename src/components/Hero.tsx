@@ -1,7 +1,8 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Play, Download, ShieldCheck, ChevronDown, Swords, Zap } from "lucide-react";
 import { useLiveOnline } from "../hooks/hooks";
 import { useI18n } from "../i18n";
+import { fetchServerStatus, RealmData } from "../services/dbApi";
 
 /** Ambient particle canvas */
 function Particles() {
@@ -59,16 +60,61 @@ function Particles() {
   return <canvas ref={ref} className="pointer-events-none absolute inset-0" aria-hidden="true" />;
 }
 
-const SERVER_ROWS = [
-  { n: "Origins-1", pct: 86, c: "#ff5a3c" },
-  { n: "Origins-2", pct: 62, c: "#f5c451" },
-  { n: "Origins-3", pct: 41, c: "#38e1ff" },
-];
+const getLoadColor = (pct: number) => {
+  if (pct >= 80) return "#ff5a3c";
+  if (pct >= 50) return "#f5c451";
+  return "#38e1ff";
+};
+
+const getRoomTag = (realm: RealmData, index: number, lang: string) => {
+  const n = (realm.name || "").toLowerCase();
+  if (realm.pvp === false || n.includes("non-pvp") || n.includes("ไม่มี pvp") || n.includes("sub-server")) {
+    return lang === "th" ? "ไม่มี PvP" : "Non-PvP";
+  }
+  if (n.includes("war") || n.includes("วอร์") || n.includes("siege") || index === 0) {
+    return lang === "th" ? "PvP • วอร์" : "PvP • Siege";
+  }
+  return lang === "th" ? "ใหม่ • PvP" : "Fresh • PvP";
+};
+
+const getDisplayName = (fullName: string, fallbackIdx: number) => {
+  if (!fullName) return `Origins-${fallbackIdx + 1}`;
+  const match = fullName.match(/^([^(]+)/);
+  return (match ? match[1].trim() : fullName) || `Origins-${fallbackIdx + 1}`;
+};
 
 export default function Hero({ onRegister }: { onRegister: () => void }) {
   const { t, lang } = useI18n();
   const h = t.hero;
   const online = useLiveOnline(4874);
+
+  const [realms, setRealms] = useState<RealmData[]>([
+    { name: "Origins-1", loadPct: 86, online: 2420, max: 2500, status: "Normal", pvp: true },
+    { name: "Origins-2", loadPct: 62, online: 1680, max: 2500, status: "Normal", pvp: false },
+    { name: "Origins-3", loadPct: 41, online: 792, max: 2000, status: "Normal", pvp: true },
+  ]);
+  const [serverState, setServerState] = useState<"online" | "offline">("online");
+
+  useEffect(() => {
+    let mounted = true;
+    const loadRealms = async () => {
+      try {
+        const data = await fetchServerStatus();
+        if (mounted && data.realms && data.realms.length > 0) {
+          setRealms(data.realms);
+          setServerState(data.status.toLowerCase().includes("off") ? "offline" : "online");
+        }
+      } catch {
+        // Keep fallback
+      }
+    };
+    loadRealms();
+    const interval = setInterval(loadRealms, 15000);
+    return () => {
+      mounted = false;
+      clearInterval(interval);
+    };
+  }, []);
 
   return (
     <section id="top" className="noise relative flex min-h-[100svh] items-center overflow-hidden pt-[130px] pb-16">
@@ -163,34 +209,44 @@ export default function Hero({ onRegister }: { onRegister: () => void }) {
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2.5">
                   <span className="relative flex h-3 w-3">
-                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-                    <span className="relative inline-flex h-3 w-3 rounded-full bg-emerald-400" />
+                    <span className={`absolute inline-flex h-full w-full animate-ping rounded-full opacity-75 ${serverState === "online" ? "bg-emerald-400" : "bg-red-400"}`} />
+                    <span className={`relative inline-flex h-3 w-3 rounded-full ${serverState === "online" ? "bg-emerald-400" : "bg-red-500"}`} />
                   </span>
                   <h2 className="font-display text-sm font-bold tracking-[0.2em] text-white">{h.status}</h2>
                 </div>
-                <span className="rounded-full bg-emerald-400/10 px-2.5 py-1 font-mono text-[11px] font-bold whitespace-nowrap text-emerald-300">{h.allOnline}</span>
+                <span className={`rounded-full px-2.5 py-1 font-mono text-[11px] font-bold whitespace-nowrap ${serverState === "online" ? "bg-emerald-400/10 text-emerald-300" : "bg-red-400/10 text-red-300"}`}>
+                  {serverState === "online" ? h.allOnline : (lang === "th" ? "ออฟไลน์" : "Offline")}
+                </span>
               </div>
 
-              <div className="mt-5 space-y-3">
-                {SERVER_ROWS.map((s, i) => (
-                  <div key={s.n} className="group rounded-2xl border border-white/8 bg-white/[.03] p-3.5 transition hover:border-white/15 hover:bg-white/[.06]">
-                    <div className="flex items-center justify-between text-sm">
-                      <div className="flex items-center gap-2">
-                        <Swords className="h-4 w-4 text-white/40" />
-                        <span className="font-bold text-white">{s.n}</span>
-                        <span className="rounded bg-white/8 px-1.5 py-0.5 text-[10px] font-semibold text-white/50">{h.serverTypes[i]}</span>
+              <div className="mt-5 space-y-3 max-h-[340px] overflow-y-auto pr-1">
+                {realms.map((realm, i) => {
+                  const pct = Math.min(100, Math.max(0, realm.loadPct ?? (realm.max > 0 ? Math.round((realm.online / realm.max) * 100) : 0)));
+                  const color = getLoadColor(pct);
+                  const displayName = getDisplayName(realm.name, i);
+                  const tag = getRoomTag(realm, i, lang);
+
+                  return (
+                    <div key={realm.id ?? realm.name ?? i} className="group rounded-2xl border border-white/8 bg-white/[.03] p-3.5 transition hover:border-white/15 hover:bg-white/[.06]">
+                      <div className="flex items-center justify-between text-sm">
+                        <div className="flex items-center gap-2">
+                          <Swords className="h-4 w-4 text-white/40" />
+                          <span className="font-bold text-white">{displayName}</span>
+                          <span className="rounded bg-white/8 px-1.5 py-0.5 text-[10px] font-semibold text-white/50">{tag}</span>
+                        </div>
+                        <span className="font-mono text-xs font-bold" style={{ color }}>{pct}%</span>
                       </div>
-                      <span className="font-mono text-xs font-bold" style={{ color: s.c }}>{s.pct}%</span>
+                      <div className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-white/8">
+                        <div className="h-full rounded-full transition-all duration-1000" style={{ width: `${pct}%`, background: `linear-gradient(90deg, ${color}66, ${color})`, boxShadow: `0 0 12px ${color}` }} />
+                      </div>
                     </div>
-                    <div className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-white/8">
-                      <div className="h-full rounded-full transition-all duration-1000" style={{ width: `${s.pct}%`, background: `linear-gradient(90deg, ${s.c}66, ${s.c})`, boxShadow: `0 0 12px ${s.c}` }} />
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
 
               <a
                 href="#register"
+                onClick={onRegister}
                 className="btn-shine mt-5 block w-full rounded-xl bg-gradient-to-r from-[#d4af37] via-[#ffb52e] to-[#ff8a3c] py-3 text-center text-sm font-extrabold text-[#090d16] shadow-lg shadow-amber-500/20 transition hover:brightness-110 active:scale-[.98]"
               >
                 {h.ctaRegister}

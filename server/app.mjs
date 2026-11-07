@@ -94,10 +94,21 @@ async function status(response, config) {
     if (!result.ok) throw new Error(`upstream status ${result.status}`);
     let value = await result.json();
     if (typeof value === "string") value = JSON.parse(value);
-    return json(response, 200, { state: "online", players: Number.isInteger(value.players) ? value.players : null, updatedAt: new Date().toISOString() }, { "Cache-Control": "public, max-age=10" });
+    const realms = Array.isArray(value.realms)
+      ? value.realms.map((r, i) => ({
+          id: typeof r.id === "number" ? r.id : i,
+          name: typeof r.name === "string" ? r.name : `Origins-${i + 1}`,
+          online: Number.isInteger(r.online) ? r.online : 0,
+          max: Number.isInteger(r.max) ? r.max : 2500,
+          loadPct: Number.isInteger(r.loadPct) ? r.loadPct : 0,
+          pvp: typeof r.pvp === "boolean" ? r.pvp : true,
+          status: typeof r.status === "string" ? r.status : "Normal",
+        }))
+      : [];
+    return json(response, 200, { state: "online", players: Number.isInteger(value.players) ? value.players : null, realms, updatedAt: new Date().toISOString() }, { "Cache-Control": "public, max-age=10" });
   } catch (error) {
     console.error("OpenMU status request failed", error instanceof Error ? error.message : "unknown error");
-    return json(response, 200, { state: "offline", players: null, updatedAt: new Date().toISOString() }, { "Cache-Control": "public, max-age=5" });
+    return json(response, 200, { state: "offline", players: null, realms: [], updatedAt: new Date().toISOString() }, { "Cache-Control": "public, max-age=5" });
   }
 }
 

@@ -77,9 +77,9 @@ function openMuDevApiPlugin() {
           antiCheat: "MHP GameGuard 100% Active",
           totalAccounts: 28420 + registeredAccounts.size,
           realms: [
-            { name: "Origins-1 (PvP & Market)", loadPct: 86, online: 2420, max: 2500, status: "Normal" },
-            { name: "Origins-2 (Non-PvP)", loadPct: 62, online: 1680, max: 2500, status: "Normal" },
-            { name: "Origins-3 (Sub-Server)", loadPct: 41, online: 792, max: 2000, status: "Normal" },
+            { id: 0, name: "Origins-1 (PvP & Market)", loadPct: 86, online: 2420, max: 2500, status: "Normal", pvp: true },
+            { id: 1, name: "Origins-2 (Non-PvP)", loadPct: 62, online: 1680, max: 2500, status: "Normal", pvp: false },
+            { id: 2, name: "Origins-3 (Sub-Server)", loadPct: 41, online: 792, max: 2000, status: "Normal", pvp: true },
           ],
           onlineExchange: {
             creditsPerHour: 10,

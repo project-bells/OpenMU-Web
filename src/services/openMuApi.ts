@@ -13,9 +13,20 @@ export interface RegisterResponse {
   isSimulated?: boolean;
 }
 
+export interface ServerRealm {
+  id?: number;
+  name: string;
+  online: number;
+  max: number;
+  loadPct: number;
+  pvp?: boolean;
+  status?: string;
+}
+
 export interface ServerStatus {
   state: "online" | "offline" | "maintenance";
   players: number | null;
+  realms?: ServerRealm[];
   updatedAt: string;
 }
 

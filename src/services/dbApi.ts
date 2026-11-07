@@ -1,5 +1,15 @@
 import { CharacterRankItem, GuildRankItem, MOCK_CHARACTERS, MOCK_GUILDS } from "../data";
 
+export interface RealmData {
+  id?: number;
+  name: string;
+  loadPct: number;
+  online: number;
+  max: number;
+  status: string;
+  pvp?: boolean;
+}
+
 export interface ServerStatusData {
   serverName: string;
   version: string;
@@ -9,13 +19,7 @@ export interface ServerStatusData {
   uptime: string;
   antiCheat: string;
   totalAccounts: number;
-  realms: {
-    name: string;
-    loadPct: number;
-    online: number;
-    max: number;
-    status: string;
-  }[];
+  realms: RealmData[];
   onlineExchange: {
     creditsPerHour: number;
     creditToWcoinRatio: number;
@@ -52,16 +56,6 @@ export interface ExchangeResult {
  * Fetch live Server Status from server database
  */
 export async function fetchServerStatus(): Promise<ServerStatusData> {
-  try {
-    const res = await fetch("/api/server/status");
-    if (res.ok) {
-      return await res.json();
-    }
-  } catch {
-    // Network fallback
-  }
-
-  // Resilient fallback
   const now = new Date();
   const utc7 = new Intl.DateTimeFormat("en-GB", {
     timeZone: "Asia/Bangkok",
@@ -71,6 +65,62 @@ export async function fetchServerStatus(): Promise<ServerStatusData> {
     hour12: false,
   }).format(now);
 
+  try {
+    const res = await fetch("/api/server/status");
+    if (res.ok) {
+      const data = await res.json();
+      if (data && typeof data === "object") {
+        const rawRealms = Array.isArray(data.realms) && data.realms.length > 0
+          ? data.realms
+          : null;
+
+        const onlineCount = typeof data.players === "number"
+          ? data.players
+          : typeof data.onlineCount === "number"
+            ? data.onlineCount
+            : (rawRealms ? rawRealms.reduce((acc: number, r: any) => acc + (r.online || 0), 0) : 4892);
+
+        const realms: RealmData[] = rawRealms
+          ? rawRealms.map((r: any, idx: number) => ({
+              id: typeof r.id === "number" ? r.id : idx,
+              name: r.name || `Origins-${idx + 1}`,
+              loadPct: typeof r.loadPct === "number" ? r.loadPct : Math.min(100, Math.round(((r.online || 0) / (r.max || 2500)) * 100)),
+              online: typeof r.online === "number" ? r.online : 0,
+              max: typeof r.max === "number" ? r.max : 2500,
+              status: r.status || "Normal",
+              pvp: typeof r.pvp === "boolean" ? r.pvp : true,
+            }))
+          : [
+              { name: "Origins-1 (PvP & Market)", loadPct: 86, online: 2420, max: 2500, status: "Normal", pvp: true },
+              { name: "Origins-2 (Non-PvP)", loadPct: 62, online: 1680, max: 2500, status: "Normal", pvp: false },
+              { name: "Origins-3 (Sub-Server)", loadPct: 41, online: 792, max: 2000, status: "Normal", pvp: true },
+            ];
+
+        return {
+          serverName: data.serverName || "MuOrigins S6E3",
+          version: data.version || "Season 6 Episode 3",
+          status: (data.state || data.status || "ONLINE").toUpperCase(),
+          onlineCount,
+          serverTime: `${utc7} (UTC+7 Bangkok)`,
+          uptime: data.uptime || "99.98%",
+          antiCheat: data.antiCheat || "MHP GameGuard 100% Active",
+          totalAccounts: data.totalAccounts || 28420,
+          realms,
+          onlineExchange: data.onlineExchange || {
+            creditsPerHour: 10,
+            creditToWcoinRatio: 0.5,
+            ratioDescription: "100 Credits = 50 WCoin",
+            minExchange: 100,
+            status: "ACTIVE",
+          },
+        };
+      }
+    }
+  } catch {
+    // Network fallback
+  }
+
+  // Resilient fallback
   return {
     serverName: "MuOrigins S6E3",
     version: "Season 6 Episode 3",
@@ -81,9 +131,9 @@ export async function fetchServerStatus(): Promise<ServerStatusData> {
     antiCheat: "MHP GameGuard 100% Active",
     totalAccounts: 28420,
     realms: [
-      { name: "Origins-1 (PvP & Market)", loadPct: 86, online: 2420, max: 2500, status: "Normal" },
-      { name: "Origins-2 (Non-PvP)", loadPct: 62, online: 1680, max: 2500, status: "Normal" },
-      { name: "Origins-3 (Sub-Server)", loadPct: 41, online: 792, max: 2000, status: "Normal" },
+      { name: "Origins-1 (PvP & Market)", loadPct: 86, online: 2420, max: 2500, status: "Normal", pvp: true },
+      { name: "Origins-2 (Non-PvP)", loadPct: 62, online: 1680, max: 2500, status: "Normal", pvp: false },
+      { name: "Origins-3 (Sub-Server)", loadPct: 41, online: 792, max: 2000, status: "Normal", pvp: true },
     ],
     onlineExchange: {
       creditsPerHour: 10,

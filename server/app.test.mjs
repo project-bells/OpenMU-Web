@@ -49,7 +49,12 @@ test("registration forwards the official contract and keeps the API key server-s
 test("server status normalizes OpenMU's JSON-string response", async (context) => {
   const upstream = await listen((_request, response) => {
     response.writeHead(200, { "Content-Type": "application/json" });
-    response.end(JSON.stringify(JSON.stringify({ state: "Online", players: 42, playersList: ["private-name"] })));
+    response.end(JSON.stringify(JSON.stringify({
+      state: "Online",
+      players: 42,
+      playersList: ["private-name"],
+      realms: [{ id: 0, name: "Origins-1", online: 42, max: 2500, loadPct: 2, pvp: true, status: "Normal" }],
+    })));
   });
   const gateway = await listen(createHandler({ apiUrl: upstream.url, apiKey: "x".repeat(32), trustProxy: false, requestTimeoutMs: 1000 }));
   context.after(() => { gateway.server.close(); upstream.server.close(); });
@@ -59,6 +64,8 @@ test("server status normalizes OpenMU's JSON-string response", async (context) =
   assert.equal(body.state, "online");
   assert.equal(body.players, 42);
   assert.equal("playersList" in body, false);
+  assert.equal(body.realms.length, 1);
+  assert.equal(body.realms[0].name, "Origins-1");
 });
 
 test("malformed and traversal-like static paths never escape the dist root", () => {
