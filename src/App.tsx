@@ -2,9 +2,19 @@ import { useState, useEffect } from "react";
 import Navbar from "./components/Navbar";
 import Hero from "./components/Hero";
 import ServerStatusWidget from "./components/ServerStatusWidget";
+import Features from "./components/Features";
+import OnlineExchangeSection from "./components/OnlineExchangeSection";
 import RegisterSection from "./components/RegisterSection";
+import RankingSection from "./components/RankingSection";
 import DownloadSection from "./components/DownloadSection";
+import HighlightsSection from "./components/HighlightsSection";
+import GettingStartedSection from "./components/GettingStartedSection";
+import EcosystemSection from "./components/EcosystemSection";
 import Classes from "./components/Classes";
+import Siege from "./components/Siege";
+import Events from "./components/Events";
+import Faq from "./components/Faq";
+import FinalCta from "./components/FinalCta";
 import Footer from "./components/Footer";
 import RegisterModal from "./components/RegisterModal";
 import ErrorBoundary from "./components/ErrorBoundary";
@@ -13,6 +23,7 @@ import { I18nProvider, useI18n } from "./i18n";
 import { Zap, ArrowUp } from "lucide-react";
 
 function StickyMobileCta({ onRegister }: { onRegister: () => void }) {
+  const { t } = useI18n();
   const [show, setShow] = useState(false);
   useEffect(() => {
     const fn = () => setShow(window.scrollY > window.innerHeight * 0.9);
@@ -29,7 +40,7 @@ function StickyMobileCta({ onRegister }: { onRegister: () => void }) {
         onClick={onRegister}
         className="btn-shine flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#d4af37] via-[#ffb52e] to-[#ff8a3c] px-6 py-4 text-base font-extrabold text-[#090d16] shadow-[0_18px_50px_-10px_rgba(212,175,55,.7)]"
       >
-        <Zap className="h-5 w-5 shrink-0" /> Create account
+        <Zap className="h-5 w-5 shrink-0" /> {t.app.mobileCta}
       </button>
     </div>
   );
@@ -64,7 +75,7 @@ function Page() {
   return (
     <div className="min-h-screen bg-[#090d16] text-white antialiased">
       <a
-        href="#register"
+        href="#rates"
         className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:rounded-lg focus:bg-amber-400 focus:px-4 focus:py-2 focus:font-bold focus:text-black"
       >
         {t.app.skip}
@@ -75,10 +86,34 @@ function Page() {
         <Hero onRegister={openRegister} />
 
         {/* Section 2: Server Live Status & Stats */}
-        <div id="status"><ServerStatusWidget /></div>
+        <ServerStatusWidget />
+
+        {/* Server Rates & Formula (id="rates") */}
+        <Features />
+
+        {/* Online-to-Credits & WCoin Exchange System (id="online-rewards") */}
+        <OnlineExchangeSection onRegister={openRegister} />
+
+        {/* Section 3: 3 Key Highlights */}
+        <HighlightsSection />
+
+        {/* Section 4: 3-Step Getting Started */}
+        <GettingStartedSection onRegister={openRegister} />
         <RegisterSection />
         <DownloadSection />
+        <RankingSection />
+
+        {/* Section 5: Ecosystem & External Links */}
+        <EcosystemSection />
+
+        {/* Lore, Class Trees, Siege & FAQ */}
         <Classes onRegister={openRegister} />
+        <Siege onRegister={openRegister} />
+        <Events />
+        <Faq />
+
+        {/* Section 6: Footer CTA */}
+        <FinalCta onRegister={openRegister} />
       </main>
       <Footer onRegister={openRegister} />
       <RegisterModal open={modal} onClose={() => setModal(false)} />

@@ -1,19 +1,29 @@
-import { Swords, ShieldAlert, Trophy, ArrowRight, Sparkles, CheckCircle2 } from "lucide-react";
+import { Swords, Coins, Trophy, ArrowRight, Sparkles, CheckCircle2 } from "lucide-react";
+import { useI18n } from "../i18n";
 
 export default function HighlightsSection() {
+  const { lang } = useI18n();
+
   const highlights = [
     {
       step: "01",
-      badge: "Pure S6E3 Rates",
-      title: "Authentic Season 6 Episode 3 Formula",
-      subtitle: "50x EXP • 30% Excellent Drop • Original Balance",
-      description:
-        "Tuned faithfully to the classic 2005 GMO formula. Fast enough to respect your adult schedule, yet deep enough that every reset, jewel, and Master Skill Tree upgrade feels genuinely earned. No custom wings with +50,000 stats. Pure nostalgia, refined for competitive longevity.",
-      points: [
-        "Reset at Level 400 with stat retention",
-        "Classic drop tables for Kanturu, Raklion & Vulcanus",
-        "Original 7 classes with verified duel formulas",
-      ],
+      badge: lang === "th" ? "เรท S6E3 แท้ดั้งเดิม" : "Pure S6E3 Rates",
+      title: lang === "th" ? "ระบบคลาสสิก Season 6 Ep 3" : "Authentic Season 6 Episode 3 Formula",
+      subtitle: lang === "th" ? "EXP 50x • ดร็อป Ex 30% • สมดุลแท้" : "50x EXP • 30% Excellent Drop • Original Balance",
+      description: lang === "th"
+        ? "ปรับแต่งตามสูตรดั้งเดิม เล่นสนุก จบงานไว เหมาะกับคนวัยทำงาน ทุกการรีเซ็ต อัญมณี และ Master Skill Tree มีค่าเสมอ ไร้ปีกแฟนซี +50,000 สเตตัส มั่นคงยาวนาน"
+        : "Tuned faithfully to the classic GMO formula. Fast enough to respect your adult schedule, yet deep enough that every reset, jewel, and Master Skill Tree upgrade feels genuinely earned. Pure nostalgia, refined for competitive longevity.",
+      points: lang === "th"
+        ? [
+            "รีเซ็ตเลเวล 400 คงสเตตัสตามแบบฉบับ S6",
+            "ตารางดร็อปไอเทม Kanturu, Raklion และ Vulcanus แท้",
+            "7 สายอาชีพดั้งเดิม สมดุลดาเมจและระบบ Combo ชัดเจน",
+          ]
+        : [
+            "Reset at Level 400 with stat retention",
+            "Classic drop tables for Kanturu, Raklion & Vulcanus",
+            "Original 7 classes with verified duel formulas",
+          ],
       icon: Swords,
       glow: "from-amber-500/20 to-orange-500/5",
       accent: "text-amber-300",
@@ -21,33 +31,47 @@ export default function HighlightsSection() {
     },
     {
       step: "02",
-      badge: "Fair Play Economy",
-      title: "100% Player-Driven, Zero Pay-to-Win",
-      subtitle: "Best Gear Drops In-Game • Farmable WCoins",
-      description:
-        "Best-in-slot equipment (+15 Exc, 380lvl weapons, Socket gear) drops strictly through in-game gameplay, Blood Castle runs, and Kundun boss raids. Our cash shop offers only vanity cosmetics and minor quality-of-life perks. Free-to-play warriors compete on equal footing with the top tier.",
-      points: [
-        "Zero pay-to-max gear or paid stat packs",
-        "Active Lorencia market with hundreds of player shops",
-        "WCoins earnable via hourly dungeons and events",
-      ],
-      icon: ShieldAlert,
+      badge: lang === "th" ? "ออนไลน์รับเครดิตฟรี" : "Play-to-Earn Rewards",
+      title: lang === "th" ? "ออนไลน์แลกเครดิต & แลก WCoin" : "Online Hours → Credits → WCoins",
+      subtitle: lang === "th" ? "1 ชม. = 10 Credits • 100 Credits แลก 50 WCoin" : "1 Hr = 10 Credits • 100 Credits = 50 WCoin",
+      description: lang === "th"
+        ? "สายฟรีอยู่สบายด้วยระบบ Play-to-Earn เพียงเปิดเกมออนไลน์ไว้ รับทันที 10 Credits ทุกๆ 60 นาที สะสมนำไปแลกเป็น WCoin เพื่อซื้อไอเทมใน Web Shop และ Cash Shop ได้ 100% โดยไม่ต้องเติมเงินจริง"
+        : "Free-to-play friendly! Simply stay logged in-game to earn 10 Credits per hour automatically. Convert 100 Credits into 50 WCoin directly on our portal to spend in Cash Shop & Web Shop.",
+      points: lang === "th"
+        ? [
+            "ระบบนับเวลาออนไลน์อัตโนมัติ (Online Check-In) 1 ชม. = 10 Credits",
+            "อัตราแลกเปลี่ยนคงที่ 100 Credits แลกได้ 50 WCoin ทันที",
+            "นำ WCoin ไปช้อปปิ้งที่ Web Shop (webshop.muorigins.online) ได้จริง",
+          ]
+        : [
+            "Automatic online hour check-in: 1 hour online = 10 Credits",
+            "Guaranteed conversion: 100 Credits = 50 WCoins directly",
+            "Spend your earned WCoins at Web Shop (webshop.muorigins.online)",
+          ],
+      icon: Coins,
       glow: "from-purple-500/20 to-violet-500/5",
       accent: "text-purple-300",
       border: "border-purple-400/30",
     },
     {
       step: "03",
-      badge: "Guild Glory",
-      title: "Legendary Weekly Castle Siege",
-      subtitle: "Sundays at 20:00 UTC+7 • 300+ Active Combatants",
-      description:
-        "The pinnacle of MMORPG guild warfare. Over 300 coordinated warriors clash across the three gates of Loren Deep. The victorious alliance captures the throne, gains exclusive access to the Land of Trials, collects real marketplace taxes, and plants their banner above Lorencia.",
-      points: [
-        "Dedicated server hosting with zero siege lag",
-        "Real server market tax dividends for the Lord's guild",
-        "Lord's Mix creation and exclusive crest recognition",
-      ],
+      badge: lang === "th" ? "ศึกชิงปราสาทแห่งศักดิ์ศรี" : "Guild Glory",
+      title: lang === "th" ? "Castle Siege ทุกวันอาทิตย์" : "Legendary Weekly Castle Siege",
+      subtitle: lang === "th" ? "ทุกวันอาทิตย์ 20:00 UTC+7 • วอร์เดือด 300+ คน" : "Sundays at 20:00 UTC+7 • 300+ Active Combatants",
+      description: lang === "th"
+        ? "สุดยอดสงครามกิลด์วอร์แห่ง Loren Deep นักรบกว่า 300 ชีวิตปะทะกันเพื่อแย่งชิงบัลลังก์ปราสาท กิลด์ผู้ชนะรับสิทธิ์ครอบครอง Land of Trials และส่วนแบ่งภาษีของเซิร์ฟเวอร์"
+        : "The pinnacle of MMORPG guild warfare. Over 300 coordinated warriors clash across the three gates of Loren Deep. The victorious alliance captures the throne, gains Land of Trials, and collects marketplace taxes.",
+      points: lang === "th"
+        ? [
+            "เซิร์ฟเวอร์ความเร็วสูง ไร้ปัญหาวอร์แล็ก 100%",
+            "กิลด์เจ้าปราสาทรับส่วนแบ่งภาษีตลาดจริงและ Lord's Mix",
+            "ระบบตราพันธมิตรกิลด์และบัฟปราสาทสมบูรณ์แบบ",
+          ]
+        : [
+            "Dedicated server hosting with zero siege lag",
+            "Real server market tax dividends for the Lord's guild",
+            "Lord's Mix creation and exclusive crest recognition",
+          ],
       icon: Trophy,
       glow: "from-amber-500/20 to-amber-600/5",
       accent: "text-amber-400",
@@ -65,14 +89,18 @@ export default function HighlightsSection() {
         <div className="mx-auto max-w-3xl text-center mb-16">
           <div className="inline-flex items-center gap-2 rounded-full border border-amber-400/30 bg-amber-400/10 px-4 py-1.5 text-xs font-bold tracking-[0.2em] text-amber-300 uppercase">
             <Sparkles className="h-3.5 w-3.5" />
-            <span>The Three Pillars of MuOrigins</span>
+            <span>{lang === "th" ? "3 จุดเด่นหลักของเซิร์ฟเวอร์" : "The Three Pillars of MuOrigins"}</span>
           </div>
           <h2 className="font-display mt-4 text-3xl font-black tracking-tight text-white sm:text-5xl">
-            BUILT FOR VETERANS. <br />
-            <span className="text-gradient-gold">RESPECTED BY WARRIORS.</span>
+            {lang === "th" ? "สร้างโดยผู้เล่นตัวจริง" : "BUILT FOR VETERANS."} <br />
+            <span className="text-gradient-gold">
+              {lang === "th" ? "เพื่อสังคมเกมที่มั่นคงและยุติธรรม" : "RESPECTED BY WARRIORS."}
+            </span>
           </h2>
           <p className="mt-4 text-base text-white/60 leading-relaxed max-w-2xl mx-auto">
-            We stripped away the pay-to-win corruption and artificial bloat of modern private servers. What remains is the pure, authentic MU Online Season 6 Episode 3 experience you fell in love with.
+            {lang === "th"
+              ? "ไร้ระบบ Pay-to-Win ไม่มีการเสกของหรือขายสเตตัส ทุกอย่างหาได้จากการเล่นในเกมและเวลาออนไลน์ของคุณ"
+              : "We stripped away pay-to-win corruption and artificial bloat. What remains is the pure, authentic MU Online Season 6 Episode 3 experience you fell in love with."}
           </p>
         </div>
 
@@ -130,10 +158,10 @@ export default function HighlightsSection() {
                 {/* Card Footer Link */}
                 <div className="mt-8 pt-4 border-t border-white/8">
                   <a
-                    href="#register"
+                    href="#online-rewards"
                     className="group inline-flex items-center gap-2 text-xs font-bold text-amber-300 hover:text-amber-200 transition-colors"
                   >
-                    <span>Join the Realm</span>
+                    <span>{lang === "th" ? "ดูระบบออนไลน์แลก WCoin" : "View Online Rewards"}</span>
                     <ArrowRight className="h-3.5 w-3.5 transition group-hover:translate-x-1" />
                   </a>
                 </div>

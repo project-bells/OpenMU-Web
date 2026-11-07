@@ -1,12 +1,15 @@
 import { useEffect, useState, useId } from "react";
-import { X, User, Mail, Lock, CheckCircle2, Gamepad2, Loader2, Check, AlertCircle, ArrowRight, Download } from "lucide-react";
+import { X, User, Mail, Lock, KeyRound, CheckCircle2, Gamepad2, Loader2, Check, AlertCircle, ArrowRight, Download } from "lucide-react";
 import { registerOpenMuAccount } from "../services/openMuApi";
+import { useI18n } from "../i18n";
 
 export default function RegisterModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const { lang } = useI18n();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [email, setEmail] = useState("");
+  const [personalCode, setPersonalCode] = useState("");
 
   const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState("");
@@ -17,12 +20,14 @@ export default function RegisterModal({ open, onClose }: { open: boolean; onClos
     password: false,
     confirmPassword: false,
     email: false,
+    personalCode: false,
   });
 
   const usernameId = useId();
   const passwordId = useId();
   const confirmPasswordId = useId();
   const emailId = useId();
+  const personalCodeId = useId();
 
   useEffect(() => {
     if (open) {
@@ -68,18 +73,28 @@ export default function RegisterModal({ open, onClose }: { open: boolean; onClos
     emailError = "Invalid email format";
   }
 
-  const isFormValid = isUsernameValid && password.length <= 20 && passScore >= 3 && isConfirmValid && isEmailValid;
+  // Personal Character Deletion Code: exactly 7 digits
+  const isPersonalCodeDigits = /^[0-9]*$/.test(personalCode);
+  const isPersonalCodeValid = personalCode.length === 7 && /^[0-9]{7}$/.test(personalCode);
+  let personalCodeError = "";
+  if (touched.personalCode && personalCode) {
+    if (!isPersonalCodeDigits) personalCodeError = "Numbers only (0-9)";
+    else if (personalCode.length !== 7) personalCodeError = `Must be 7 digits (${personalCode.length}/7)`;
+  }
+
+  const isFormValid = isUsernameValid && passScore >= 3 && isConfirmValid && isEmailValid && isPersonalCodeValid;
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (loading) return;
-    setTouched({ username: true, password: true, confirmPassword: true, email: true });
+    setTouched({ username: true, password: true, confirmPassword: true, email: true, personalCode: true });
 
     if (!isFormValid) {
       if (!isUsernameValid) setApiError("Username must be 4-10 alphanumeric characters.");
       else if (passScore < 3) setApiError("Password must be at least 8 characters with numbers.");
       else if (!isConfirmValid) setApiError("Passwords do not match.");
       else if (!isEmailValid) setApiError("Please enter a valid email address.");
+      else if (!isPersonalCodeValid) setApiError("รหัสลบตัวละครต้องเป็นตัวเลข 7 หลักพอดี (0-9)");
       return;
     }
 
@@ -91,6 +106,7 @@ export default function RegisterModal({ open, onClose }: { open: boolean; onClos
         loginName: username,
         password,
         email,
+        personalCode,
       });
 
       if (res.success) {
@@ -173,8 +189,12 @@ export default function RegisterModal({ open, onClose }: { open: boolean; onClos
                 <Gamepad2 className="h-6 w-6 text-[#090d16]" />
               </span>
               <div>
-                <h3 className="font-display text-xl font-black text-white">CREATE ACCOUNT</h3>
-                <p className="text-xs text-white/50">Direct OpenMU account registration</p>
+                <h3 className="font-display text-xl font-black text-white">
+                  {lang === "th" ? "สมัครสมาชิกไอดีเกม" : "CREATE ACCOUNT"}
+                </h3>
+                <p className="text-xs text-white/50">
+                  {lang === "th" ? "เปิดใช้งานไอดีทันที • เล่นฟรี 100%" : "Instant Activation • 100% Free to Play"}
+                </p>
               </div>
             </div>
 
@@ -226,7 +246,7 @@ export default function RegisterModal({ open, onClose }: { open: boolean; onClos
                     id={passwordId}
                     type="password"
                     required
-                    maxLength={20}
+                    maxLength={64}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     onBlur={() => setTouched({ ...touched, password: true })}
@@ -250,7 +270,7 @@ export default function RegisterModal({ open, onClose }: { open: boolean; onClos
                     id={confirmPasswordId}
                     type="password"
                     required
-                    maxLength={20}
+                    maxLength={64}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     onBlur={() => setTouched({ ...touched, confirmPassword: true })}
@@ -284,6 +304,43 @@ export default function RegisterModal({ open, onClose }: { open: boolean; onClos
                 {emailError && <p className="mt-1 text-[11px] text-red-400">{emailError}</p>}
               </div>
 
+              {/* Character Deletion Code (รหัสลบตัวละคร) */}
+              <div>
+                <div className="flex items-center justify-between text-xs mb-1">
+                  <label htmlFor={personalCodeId} className="font-semibold text-white/80">
+                    รหัสลบตัวละคร (7 หลัก)
+                  </label>
+                  {isPersonalCodeValid && (
+                    <span className="text-emerald-400 flex items-center gap-1 text-[11px]">
+                      <Check className="h-3 w-3" /> Valid
+                    </span>
+                  )}
+                </div>
+                <div className="relative">
+                  <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-white/40">
+                    <KeyRound className="h-4 w-4" />
+                  </span>
+                  <input
+                    id={personalCodeId}
+                    type="password"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    required
+                    maxLength={7}
+                    value={personalCode}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/[^0-9]/g, "").slice(0, 7);
+                      setPersonalCode(val);
+                      if (!touched.personalCode) setTouched({ ...touched, personalCode: true });
+                    }}
+                    onBlur={() => setTouched({ ...touched, personalCode: true })}
+                    placeholder="ตัวเลข 7 หลัก (เช่น 1234567)"
+                    className="w-full rounded-xl border border-white/15 bg-white/5 py-2.5 pl-10 pr-3 text-sm text-white outline-none placeholder:text-white/30 focus:border-amber-400/50"
+                  />
+                </div>
+                {personalCodeError && <p className="mt-1 text-[11px] text-red-400">{personalCodeError}</p>}
+              </div>
+
               {/* Submit */}
               <button
                 type="submit"
@@ -293,18 +350,20 @@ export default function RegisterModal({ open, onClose }: { open: boolean; onClos
                 {loading ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    <span>Connecting to OpenMU Core…</span>
+                    <span>{lang === "th" ? "กำลังสร้างบัญชีผู้เล่น…" : "Creating Account…"}</span>
                   </>
                 ) : (
                   <>
-                    <span>CREATE ACCOUNT (POST /api/account/register)</span>
+                    <span>{lang === "th" ? "สมัครสมาชิก (CREATE ACCOUNT)" : "CREATE FREE ACCOUNT"}</span>
                     <ArrowRight className="h-4 w-4" />
                   </>
                 )}
               </button>
 
               <p className="text-center text-[10px] text-white/40 pt-1">
-                By registering you agree to server rules. Instant OpenMU activation.
+                {lang === "th"
+                  ? "เมื่อสมัครสมาชิกถือว่ายอมรับกฎของเซิร์ฟเวอร์ • เปิดใช้งานไอดีทันที"
+                  : "By registering you agree to server rules. Instant activation."}
               </p>
             </form>
           </div>

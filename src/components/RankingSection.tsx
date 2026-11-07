@@ -1,6 +1,8 @@
-import { useState, useMemo } from "react";
-import { Trophy, Shield, Search, ChevronLeft, ChevronRight, Crown, Filter } from "lucide-react";
-import { MOCK_CHARACTERS, MOCK_GUILDS } from "../data";
+import { useState, useMemo, useEffect, useCallback } from "react";
+import { Trophy, Shield, Search, ChevronLeft, ChevronRight, Crown, Filter, RefreshCw } from "lucide-react";
+import { CharacterRankItem, GuildRankItem, MOCK_CHARACTERS, MOCK_GUILDS } from "../data";
+import { useI18n } from "../i18n";
+import { fetchCharacterRankings, fetchGuildRankings } from "../services/dbApi";
 
 const CLASS_BADGES: Record<string, { bg: string; text: string; border: string; name: string }> = {
   DK: { bg: "bg-red-500/15", text: "text-red-400", border: "border-red-500/30", name: "Blade Master" },
@@ -13,32 +15,57 @@ const CLASS_BADGES: Record<string, { bg: string; text: string; border: string; n
 };
 
 export default function RankingSection() {
+  const { lang } = useI18n();
   const [activeTab, setActiveTab] = useState<"characters" | "guilds">("characters");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedClass, setSelectedClass] = useState<string>("ALL");
   const [currentPage, setCurrentPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
+  const [characters, setCharacters] = useState<CharacterRankItem[]>(MOCK_CHARACTERS);
+  const [guilds, setGuilds] = useState<GuildRankItem[]>(MOCK_GUILDS);
   const pageSize = 10;
+
+  // Load from database API
+  const loadDatabaseData = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const [chars, glds] = await Promise.all([
+        fetchCharacterRankings(searchQuery, selectedClass),
+        fetchGuildRankings(searchQuery),
+      ]);
+      setCharacters(chars);
+      setGuilds(glds);
+    } catch {
+      // Fallback
+    } finally {
+      setIsLoading(false);
+    }
+  }, [searchQuery, selectedClass]);
+
+  useEffect(() => {
+    loadDatabaseData();
+  }, [loadDatabaseData]);
 
   // Filtered Characters
   const filteredCharacters = useMemo(() => {
-    return MOCK_CHARACTERS.filter((char) => {
+    return characters.filter((char) => {
       const matchSearch =
         char.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         char.guild.toLowerCase().includes(searchQuery.toLowerCase());
       const matchClass = selectedClass === "ALL" || char.classShort === selectedClass;
       return matchSearch && matchClass;
     });
-  }, [searchQuery, selectedClass]);
+  }, [characters, searchQuery, selectedClass]);
 
   // Filtered Guilds
   const filteredGuilds = useMemo(() => {
-    return MOCK_GUILDS.filter((guild) => {
+    return guilds.filter((guild) => {
       return (
         guild.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         guild.master.toLowerCase().includes(searchQuery.toLowerCase())
       );
     });
-  }, [searchQuery]);
+  }, [guilds, searchQuery]);
 
   // Pagination for characters
   const totalCharPages = Math.ceil(filteredCharacters.length / pageSize) || 1;
@@ -100,13 +127,16 @@ export default function RankingSection() {
           <div>
             <div className="inline-flex items-center gap-2 rounded-full border border-amber-400/30 bg-amber-400/10 px-3.5 py-1 text-xs font-semibold text-amber-300">
               <Trophy className="h-3.5 w-3.5" />
-              <span>Season 6 Episode 3 Hall of Fame</span>
+              <span>{lang === "th" ? "หอเกียรติยศ Season 6 Episode 3" : "Season 6 Episode 3 Hall of Fame"}</span>
             </div>
             <h2 className="font-display mt-3 text-3xl font-black tracking-tight text-white sm:text-4xl">
-              SERVER <span className="text-gradient-gold">RANKINGS</span>
+              {lang === "th" ? "อันดับ" : "SERVER"}{" "}
+              <span className="text-gradient-gold">{lang === "th" ? "เซิร์ฟเวอร์" : "RANKINGS"}</span>
             </h2>
             <p className="mt-1 text-sm text-white/60">
-              Live leaderboard synchronized with OpenMU server database. Updated in real time.
+              {lang === "th"
+                ? "ตารางอันดับผู้เล่นและกิลด์ชั้นนำ อัปเดตข้อมูลแบบเรียลไทม์ตรงจากฐานข้อมูลเซิร์ฟเวอร์"
+                : "Live leaderboard synchronized with official server database. Updated in real time."}
             </p>
           </div>
 
@@ -121,7 +151,7 @@ export default function RankingSection() {
               }`}
             >
               <Trophy className="h-4 w-4" />
-              Top Characters
+              {lang === "th" ? "อันดับตัวละคร" : "Top Characters"}
             </button>
             <button
               onClick={() => handleTabChange("guilds")}
@@ -132,28 +162,44 @@ export default function RankingSection() {
               }`}
             >
               <Shield className="h-4 w-4" />
-              Top Guilds
+              {lang === "th" ? "อันดับกิลด์" : "Top Guilds"}
             </button>
           </div>
         </div>
 
         {/* Filter and Search Bar */}
         <div className="fantasy-panel gold-border mb-6 flex flex-col gap-3 rounded-2xl p-4 sm:flex-row sm:items-center sm:justify-between">
-          {/* Search Box */}
-          <div className="relative flex-1 sm:max-w-md">
-            <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-white/40">
-              <Search className="h-4 w-4" />
-            </span>
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value);
-                setCurrentPage(1);
-              }}
-              placeholder={activeTab === "characters" ? "Search character name or guild…" : "Search guild name or master…"}
-              className="w-full rounded-xl border border-white/10 bg-white/5 py-2.5 pl-10 pr-4 text-xs font-medium text-white outline-none placeholder:text-white/35 focus:border-amber-400/50"
-            />
+          {/* Search Box & Refresh */}
+          <div className="flex items-center gap-2 flex-1 sm:max-w-md">
+            <div className="relative flex-1">
+              <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-white/40">
+                <Search className="h-4 w-4" />
+              </span>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setCurrentPage(1);
+                }}
+                placeholder={
+                  activeTab === "characters"
+                    ? (lang === "th" ? "ค้นหาชื่อตัวละคร หรือ กิลด์…" : "Search character name or guild…")
+                    : (lang === "th" ? "ค้นหาชื่อกิลด์ หรือ หัวหน้ากิลด์…" : "Search guild name or master…")
+                }
+                className="w-full rounded-xl border border-white/10 bg-white/5 py-2.5 pl-10 pr-4 text-xs font-medium text-white outline-none placeholder:text-white/35 focus:border-amber-400/50"
+              />
+            </div>
+
+            <button
+              onClick={loadDatabaseData}
+              disabled={isLoading}
+              title={lang === "th" ? "รีเฟรชข้อมูลจากฐานข้อมูล" : "Sync with database"}
+              aria-label={lang === "th" ? "รีเฟรชข้อมูลจากฐานข้อมูล" : "Sync with database"}
+              className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-white/10 bg-white/5 text-white/70 hover:bg-white/10 hover:text-amber-300 transition disabled:opacity-40"
+            >
+              <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin text-amber-400" : ""}`} />
+            </button>
           </div>
 
           {/* Class Filter (Characters Tab Only) */}
@@ -161,7 +207,7 @@ export default function RankingSection() {
             <div className="flex flex-wrap items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
               <span className="text-[11px] font-semibold text-white/50 flex items-center gap-1 mr-1">
                 <Filter className="h-3 w-3" />
-                Class:
+                {lang === "th" ? "อาชีพ:" : "Class:"}
               </span>
               {["ALL", "DK", "DW", "ELF", "MG", "DL", "SUM", "RF"].map((cls) => (
                 <button
@@ -191,13 +237,13 @@ export default function RankingSection() {
               <table className="w-full text-left text-sm border-collapse">
                 <thead>
                   <tr className="border-b border-white/10 bg-white/[0.02] text-xs font-semibold uppercase tracking-wider text-white/50">
-                    <th scope="col" className="py-4 pl-6 pr-3">Rank</th>
-                    <th scope="col" className="py-4 px-4">Character</th>
-                    <th scope="col" className="py-4 px-4">Class</th>
-                    <th scope="col" className="py-4 px-4">Guild</th>
-                    <th scope="col" className="py-4 px-4 text-center">Level / Master</th>
-                    <th scope="col" className="py-4 px-4 text-center">Resets (GR)</th>
-                    <th scope="col" className="py-4 pl-4 pr-6 text-right">Status</th>
+                    <th scope="col" className="py-4 pl-6 pr-3">{lang === "th" ? "อันดับ" : "Rank"}</th>
+                    <th scope="col" className="py-4 px-4">{lang === "th" ? "ชื่อตัวละคร" : "Character"}</th>
+                    <th scope="col" className="py-4 px-4">{lang === "th" ? "อาชีพ" : "Class"}</th>
+                    <th scope="col" className="py-4 px-4">{lang === "th" ? "กิลด์" : "Guild"}</th>
+                    <th scope="col" className="py-4 px-4 text-center">{lang === "th" ? "เลเวล / มาสเตอร์" : "Level / Master"}</th>
+                    <th scope="col" className="py-4 px-4 text-center">{lang === "th" ? "รีเซ็ต (GR)" : "Resets (GR)"}</th>
+                    <th scope="col" className="py-4 pl-4 pr-6 text-right">{lang === "th" ? "สถานะ" : "Status"}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/5 font-medium">
@@ -291,13 +337,13 @@ export default function RankingSection() {
               <table className="w-full text-left text-sm border-collapse">
                 <thead>
                   <tr className="border-b border-white/10 bg-white/[0.02] text-xs font-semibold uppercase tracking-wider text-white/50">
-                    <th scope="col" className="py-4 pl-6 pr-3">Rank</th>
-                    <th scope="col" className="py-4 px-4">Guild</th>
-                    <th scope="col" className="py-4 px-4">Guild Master</th>
-                    <th scope="col" className="py-4 px-4 text-center">Members</th>
-                    <th scope="col" className="py-4 px-4 text-center">Total Resets</th>
-                    <th scope="col" className="py-4 px-4 text-center">Guild Score</th>
-                    <th scope="col" className="py-4 pl-4 pr-6 text-right">Siege Status</th>
+                    <th scope="col" className="py-4 pl-6 pr-3">{lang === "th" ? "อันดับ" : "Rank"}</th>
+                    <th scope="col" className="py-4 px-4">{lang === "th" ? "กิลด์" : "Guild"}</th>
+                    <th scope="col" className="py-4 px-4">{lang === "th" ? "หัวหน้ากิลด์" : "Guild Master"}</th>
+                    <th scope="col" className="py-4 px-4 text-center">{lang === "th" ? "สมาชิก" : "Members"}</th>
+                    <th scope="col" className="py-4 px-4 text-center">{lang === "th" ? "รีเซ็ตรวม" : "Total Resets"}</th>
+                    <th scope="col" className="py-4 px-4 text-center">{lang === "th" ? "คะแนนกิลด์" : "Guild Score"}</th>
+                    <th scope="col" className="py-4 pl-4 pr-6 text-right">{lang === "th" ? "สถานะวอร์" : "Siege Status"}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/5 font-medium">
@@ -376,13 +422,15 @@ export default function RankingSection() {
             <div>
               {activeTab === "characters" ? (
                 <span>
-                  Showing {filteredCharacters.length === 0 ? 0 : (currentPage - 1) * pageSize + 1} to{" "}
-                  {Math.min(currentPage * pageSize, filteredCharacters.length)} of {filteredCharacters.length} Warriors
+                  {lang === "th"
+                    ? `แสดง ${filteredCharacters.length === 0 ? 0 : (currentPage - 1) * pageSize + 1} ถึง ${Math.min(currentPage * pageSize, filteredCharacters.length)} จากทั้งหมด ${filteredCharacters.length} ตัวละคร`
+                    : `Showing ${filteredCharacters.length === 0 ? 0 : (currentPage - 1) * pageSize + 1} to ${Math.min(currentPage * pageSize, filteredCharacters.length)} of ${filteredCharacters.length} Warriors`}
                 </span>
               ) : (
                 <span>
-                  Showing {filteredGuilds.length === 0 ? 0 : (currentPage - 1) * pageSize + 1} to{" "}
-                  {Math.min(currentPage * pageSize, filteredGuilds.length)} of {filteredGuilds.length} Guilds
+                  {lang === "th"
+                    ? `แสดง ${filteredGuilds.length === 0 ? 0 : (currentPage - 1) * pageSize + 1} ถึง ${Math.min(currentPage * pageSize, filteredGuilds.length)} จากทั้งหมด ${filteredGuilds.length} กิลด์`
+                    : `Showing ${filteredGuilds.length === 0 ? 0 : (currentPage - 1) * pageSize + 1} to ${Math.min(currentPage * pageSize, filteredGuilds.length)} of ${filteredGuilds.length} Guilds`}
                 </span>
               )}
             </div>

@@ -32,13 +32,13 @@ export const CLASSES: {
   color: string;
   icon: string;
 }[] = [
-  { id: "dk", name: "Dark Knight", title: "Blade Master", stats: { STR: 95, AGI: 60, VIT: 88, ENE: 25 }, skills: ["Twisting Slash", "Death Stab", "Greater Fortitude", "Combo System"], image: "/images/class-dk.jpg", color: "#ff5a3c", icon: "Sword" },
-  { id: "dw", name: "Dark Wizard", title: "Soul Master", stats: { STR: 20, AGI: 55, VIT: 45, ENE: 98 }, skills: ["Evil Spirit", "Hellfire", "Teleport", "Mana Shield"], image: "/images/class-dw.jpg", color: "#8b5cf6", icon: "Sparkles" },
-  { id: "elf", name: "Fairy Elf", title: "Muse Elf", stats: { STR: 55, AGI: 92, VIT: 50, ENE: 80 }, skills: ["Greater Damage", "Greater Defense", "Heal", "Penetration"], image: "/images/class-elf.jpg", color: "#38e1ff", icon: "Heart" },
-  { id: "dl", name: "Dark Lord", title: "Lord Emperor", stats: { STR: 80, AGI: 65, VIT: 75, ENE: 70, CMD: 96 }, skills: ["Fire Burst", "Force Wave", "Summon Pets", "Critical Damage+"], image: "/images/class-dl.jpg", color: "#f5c451", icon: "Crown" },
-  { id: "mg", name: "Magic Gladiator", title: "Duel Master", stats: { STR: 85, AGI: 70, VIT: 60, ENE: 85 }, skills: ["Gigantic Storm", "Fire Slash", "Power Slash", "Mana Shield"], image: "/images/class-dk.jpg", color: "#ff8a3c", icon: "Flame" },
-  { id: "sum", name: "Summoner", title: "Bloody Summoner", stats: { STR: 25, AGI: 60, VIT: 55, ENE: 92 }, skills: ["Berserker", "Weakness", "Chain Lightning", "Sleep"], image: "/images/class-dw.jpg", color: "#ec4899", icon: "Moon" },
-  { id: "rf", name: "Rage Fighter", title: "Fist Master", stats: { STR: 90, AGI: 85, VIT: 82, ENE: 30 }, skills: ["Dark Side", "Dragon Punch", "Ignore Defense", "Charge"], image: "/images/class-dl.jpg", color: "#22c55e", icon: "Zap" },
+  { id: "dk", name: "Dark Knight", title: "Blade Master", stats: { STR: 95, AGI: 60, VIT: 88, ENE: 25 }, skills: ["Twisting Slash", "Death Stab", "Greater Fortitude", "Combo System"], image: "/assets/aistudio/Dark_Knight_4c045d6b.jpg", color: "#ff5a3c", icon: "Sword" },
+  { id: "dw", name: "Dark Wizard", title: "Soul Master", stats: { STR: 20, AGI: 55, VIT: 45, ENE: 98 }, skills: ["Evil Spirit", "Hellfire", "Teleport", "Mana Shield"], image: "/assets/aistudio/Dark_Wizard_ba533c69.jpg", color: "#8b5cf6", icon: "Sparkles" },
+  { id: "elf", name: "Fairy Elf", title: "Muse Elf", stats: { STR: 55, AGI: 92, VIT: 50, ENE: 80 }, skills: ["Greater Damage", "Greater Defense", "Heal", "Penetration"], image: "/assets/aistudio/Fairy_Elf_85b3e6a6.jpg", color: "#38e1ff", icon: "Heart" },
+  { id: "dl", name: "Dark Lord", title: "Lord Emperor", stats: { STR: 80, AGI: 65, VIT: 75, ENE: 70, CMD: 96 }, skills: ["Fire Burst", "Force Wave", "Summon Pets", "Critical Damage+"], image: "/assets/aistudio/Dark_Lord_0763a816.jpg", color: "#f5c451", icon: "Crown" },
+  { id: "mg", name: "Magic Gladiator", title: "Duel Master", stats: { STR: 85, AGI: 70, VIT: 60, ENE: 85 }, skills: ["Gigantic Storm", "Fire Slash", "Power Slash", "Mana Shield"], image: "/assets/aistudio/Magic_Gladiator_f6113e09.jpg", color: "#ff8a3c", icon: "Flame" },
+  { id: "sum", name: "Summoner", title: "Bloody Summoner", stats: { STR: 25, AGI: 60, VIT: 55, ENE: 92 }, skills: ["Berserker", "Weakness", "Chain Lightning", "Sleep"], image: "/assets/aistudio/Summoner_21307bf2.jpg", color: "#ec4899", icon: "Moon" },
+  { id: "rf", name: "Rage Fighter", title: "Fist Master", stats: { STR: 90, AGI: 85, VIT: 82, ENE: 30 }, skills: ["Dark Side", "Dragon Punch", "Ignore Defense", "Charge"], image: "/assets/aistudio/Rage_Fighte_cd980204.jpg", color: "#22c55e", icon: "Zap" },
 ];
 
 export const EVENTS = [
@@ -82,13 +82,13 @@ export interface CharacterRankItem {
 export const MOCK_CHARACTERS: CharacterRankItem[] = [
   { rank: 1, name: "xX_Khaos_Xx", classId: "dk", className: "Blade Master", classShort: "DK", level: 400, masterLevel: 250, resets: 98, grandResets: 4, guild: "VENDETTA", isOnline: true },
   { rank: 2, name: "SoulReaper", classId: "dw", className: "Grand Master", classShort: "DW", level: 400, masterLevel: 245, resets: 95, grandResets: 4, guild: "VENDETTA", isOnline: true },
-  { rank: 3, name: "QueenAegis", classId: "elf", className: "High Elf", classShort: "ELF", level: 400, masterLevel: 240, resets: 93, grandResets: 3, guild: "AegisGuard", isOnline: true },
+  { rank: 3, name: "QueenElf", classId: "elf", className: "High Elf", classShort: "ELF", level: 400, masterLevel: 240, resets: 93, grandResets: 3, guild: "IronGuard", isOnline: true },
   { rank: 4, name: "LordViper", classId: "dl", className: "Lord Emperor", classShort: "DL", level: 400, masterLevel: 238, resets: 91, grandResets: 3, guild: "VENDETTA", isOnline: false },
   { rank: 5, name: "ComboMaster", classId: "dk", className: "Blade Master", classShort: "DK", level: 400, masterLevel: 230, resets: 89, grandResets: 3, guild: "Nemesis", isOnline: true },
   { rank: 6, name: "StormBringer", classId: "mg", className: "Duel Master", classShort: "MG", level: 400, masterLevel: 228, resets: 87, grandResets: 3, guild: "Immortals", isOnline: false },
   { rank: 7, name: "DarkIllusion", classId: "dw", className: "Grand Master", classShort: "DW", level: 400, masterLevel: 225, resets: 86, grandResets: 2, guild: "OldSchool", isOnline: true },
   { rank: 8, name: "FistOfDoom", classId: "rf", className: "Fist Master", classShort: "RF", level: 400, masterLevel: 220, resets: 84, grandResets: 2, guild: "Nemesis", isOnline: true },
-  { rank: 9, name: "BloodCurse", classId: "sum", className: "Dimension Master", classShort: "SUM", level: 400, masterLevel: 218, resets: 82, grandResets: 2, guild: "AegisGuard", isOnline: false },
+  { rank: 9, name: "BloodCurse", classId: "sum", className: "Dimension Master", classShort: "SUM", level: 400, masterLevel: 218, resets: 82, grandResets: 2, guild: "IronGuard", isOnline: false },
   { rank: 10, name: "ArchangelDK", classId: "dk", className: "Blade Master", classShort: "DK", level: 400, masterLevel: 215, resets: 80, grandResets: 2, guild: "Phoenix", isOnline: true },
   { rank: 11, name: "LunarGoddess", classId: "elf", className: "High Elf", classShort: "ELF", level: 400, masterLevel: 210, resets: 79, grandResets: 2, guild: "OldSchool", isOnline: true },
   { rank: 12, name: "TitanLord", classId: "dl", className: "Lord Emperor", classShort: "DL", level: 400, masterLevel: 205, resets: 77, grandResets: 2, guild: "Immortals", isOnline: false },
@@ -114,7 +114,7 @@ export interface GuildRankItem {
 
 export const MOCK_GUILDS: GuildRankItem[] = [
   { rank: 1, name: "VENDETTA", master: "LordViper", score: 58420, totalResets: 1480, members: "39/40", siegeStatus: "Castle Lord" },
-  { rank: 2, name: "AegisGuard", master: "QueenAegis", score: 51200, totalResets: 1290, members: "38/40", siegeStatus: "Challenger" },
+  { rank: 2, name: "IronGuard", master: "QueenElf", score: 51200, totalResets: 1290, members: "38/40", siegeStatus: "Challenger" },
   { rank: 3, name: "Nemesis", master: "ComboMaster", score: 47800, totalResets: 1180, members: "40/40", siegeStatus: "Challenger" },
   { rank: 4, name: "Immortals", master: "StormBringer", score: 42300, totalResets: 1040, members: "37/40", siegeStatus: "Alliance" },
   { rank: 5, name: "OldSchool", master: "DarkIllusion", score: 38900, totalResets: 960, members: "36/40", siegeStatus: "Alliance" },

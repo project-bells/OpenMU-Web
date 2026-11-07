@@ -37,7 +37,6 @@ export default function Classes({ onRegister }: { onRegister: () => void }) {
         {/* tabs */}
         <div className="reveal mt-10 flex gap-2 overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" role="tablist" aria-label={c.tablist}>
           {CLASSES.map((k) => {
-            const I = ICONS[k.icon] ?? Sword;
             const isActive = k.id === active;
             return (
               <button
@@ -45,39 +44,43 @@ export default function Classes({ onRegister }: { onRegister: () => void }) {
                 role="tab"
                 aria-selected={isActive}
                 onClick={() => setActive(k.id)}
-                className={`flex shrink-0 items-center gap-2.5 rounded-2xl border px-4 py-3 text-sm font-bold whitespace-nowrap transition-all duration-300 ${
+                className={`flex shrink-0 items-center gap-2.5 rounded-2xl border px-3.5 py-2.5 text-sm font-bold whitespace-nowrap transition-all duration-300 ${
                   isActive
-                    ? "border-transparent bg-gradient-to-r from-[#f5c451] to-[#ff8a3c] text-[#1a1200] shadow-lg shadow-amber-500/30"
-                    : "border-white/10 bg-white/[.04] text-white/65 hover:border-white/20 hover:text-white"
+                    ? "border-amber-400 bg-gradient-to-r from-[#f5c451] to-[#ff8a3c] text-[#1a1200] shadow-lg shadow-amber-500/30 scale-105"
+                    : "border-white/10 bg-white/[.04] text-white/70 hover:border-white/20 hover:text-white"
                 }`}
               >
-                <I className="h-4 w-4" />
-                {k.name}
+                <img
+                  src={k.image}
+                  alt={k.name}
+                  className="h-6 w-6 rounded-lg object-cover object-top border border-black/30 shadow-sm"
+                />
+                <span>{k.name}</span>
               </button>
             );
           })}
         </div>
 
         {/* showcase */}
-        <div className="reveal mt-6 grid overflow-hidden rounded-[28px] border border-white/10 bg-gradient-to-br from-[#10132e] to-[#070818] lg:grid-cols-[.9fr_1.1fr]" style={{ ["--reveal-delay" as string]: "120ms" }}>
+        <div className="reveal mt-6 grid overflow-hidden rounded-[28px] border border-white/10 bg-gradient-to-br from-[#10132e] to-[#070818] lg:grid-cols-[.95fr_1.05fr]" style={{ ["--reveal-delay" as string]: "120ms" }}>
           {/* image */}
-          <div className="relative min-h-[340px] overflow-hidden sm:min-h-[440px] lg:min-h-[560px]">
+          <div className="relative min-h-[380px] overflow-hidden sm:min-h-[480px] lg:min-h-[580px] bg-[#050711]">
             <img
               key={cls.id}
               src={cls.image}
               alt={`${cls.name} — ${cls.title}`}
-              className="absolute inset-0 h-full w-full object-cover object-top"
+              className="absolute inset-0 h-full w-full object-cover object-top transition-transform duration-700"
               loading="lazy"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#070818] via-transparent to-transparent" />
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent to-[#070818]/40 max-lg:bg-gradient-to-t" />
-            <div className="absolute inset-0 mix-blend-overlay opacity-40" style={{ background: `linear-gradient(160deg, ${cls.color}55, transparent 60%)` }} />
-            <div className="absolute bottom-5 left-5 flex items-center gap-2">
-              <span className="glass rounded-full px-3.5 py-1.5 text-xs font-bold text-white">⚔ {tx.role}</span>
+            <div className="absolute inset-0 bg-gradient-to-t from-[#070818] via-transparent to-transparent opacity-90" />
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-[#070818]/60 max-lg:bg-gradient-to-t" />
+            <div className="absolute inset-0 mix-blend-overlay opacity-30" style={{ background: `linear-gradient(160deg, ${cls.color}55, transparent 60%)` }} />
+            <div className="absolute bottom-5 left-5 flex items-center gap-2 z-10">
+              <span className="glass rounded-full px-3.5 py-1.5 text-xs font-bold text-white shadow-md">⚔ {tx.role}</span>
             </div>
             <div
-              className="absolute top-5 left-5 rounded-full px-3.5 py-1.5 font-mono text-[11px] font-bold tracking-widest uppercase"
-              style={{ background: `${cls.color}22`, color: cls.color, border: `1px solid ${cls.color}55` }}
+              className="absolute top-5 left-5 rounded-full px-3.5 py-1.5 font-mono text-[11px] font-bold tracking-widest uppercase z-10 shadow-md backdrop-blur-md"
+              style={{ background: `${cls.color}22`, color: cls.color, border: `1px solid ${cls.color}66` }}
             >
               {cls.title}
             </div>
