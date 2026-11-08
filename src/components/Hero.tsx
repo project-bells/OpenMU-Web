@@ -78,9 +78,9 @@ const getRoomTag = (realm: RealmData, index: number, lang: string) => {
 };
 
 const getDisplayName = (fullName: string, fallbackIdx: number) => {
-  if (!fullName) return `Origins-${fallbackIdx + 1}`;
+  if (!fullName) return `eGiS-${fallbackIdx + 1}`;
   const match = fullName.match(/^([^(]+)/);
-  return (match ? match[1].trim() : fullName) || `Origins-${fallbackIdx + 1}`;
+  return (match ? match[1].trim() : fullName) || `eGiS-${fallbackIdx + 1}`;
 };
 
 export default function Hero({ onRegister }: { onRegister: () => void }) {
@@ -89,9 +89,9 @@ export default function Hero({ onRegister }: { onRegister: () => void }) {
   const online = useLiveOnline(4874);
 
   const [realms, setRealms] = useState<RealmData[]>([
-    { name: "Origins-1", loadPct: 86, online: 2420, max: 2500, status: "Normal", pvp: true },
-    { name: "Origins-2", loadPct: 62, online: 1680, max: 2500, status: "Normal", pvp: false },
-    { name: "Origins-3", loadPct: 41, online: 792, max: 2000, status: "Normal", pvp: true },
+    { name: "eGiS-1", loadPct: 86, online: 2420, max: 2500, status: "Normal", pvp: true },
+    { name: "eGiS-2", loadPct: 62, online: 1680, max: 2500, status: "Normal", pvp: false },
+    { name: "eGiS-3", loadPct: 41, online: 792, max: 2000, status: "Normal", pvp: true },
   ]);
   const [serverState, setServerState] = useState<"online" | "offline">("online");
 

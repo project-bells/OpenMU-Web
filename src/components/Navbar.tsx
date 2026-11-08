@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Menu, X, Download, Gamepad2, ShoppingBag, ExternalLink, UserPlus, Trophy, Home, Swords } from "lucide-react";
+import { Menu, X, Download, ShoppingBag, ExternalLink, UserPlus, Trophy, Home, Swords } from "lucide-react";
 import { useLiveOnline } from "../hooks/hooks";
 import { LangDropdown, LangGrid } from "./LangSwitcher";
 import { useI18n } from "../i18n";
@@ -55,10 +55,14 @@ export default function Navbar({ onRegister }: { onRegister: () => void }) {
                 : "shadow-[0_8px_30px_-12px_rgba(0,0,0,0.8)]"
             }`}
           >
-            {/* Logo: MU Origins with glowing text/emblem */}
+            {/* Logo: eGiS-MU with glowing emblem */}
             <a href="#top" className="group flex shrink-0 items-center gap-3">
-              <span className="relative grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-[#d4af37] via-[#997b1a] to-[#5b21b6] shadow-lg shadow-amber-500/30 transition-transform duration-300 group-hover:scale-105 group-hover:rotate-3">
-                <Gamepad2 className="h-5 w-5 text-white" strokeWidth={2.2} />
+              <span className="relative grid h-10 w-10 place-items-center rounded-xl overflow-hidden shadow-lg shadow-amber-500/30 transition-transform duration-300 group-hover:scale-105">
+                <img
+                  src="/images/logo.png"
+                  alt="eGiS-MU Logo"
+                  className="h-full w-full object-cover"
+                />
                 <span className="absolute -top-1 -right-1 flex h-3 w-3">
                   <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
                   <span className="relative inline-flex h-3 w-3 rounded-full border-2 border-[#090d16] bg-emerald-400" />
@@ -69,7 +73,7 @@ export default function Navbar({ onRegister }: { onRegister: () => void }) {
                   className="font-display block text-base sm:text-lg tracking-wide text-white drop-shadow-[0_0_12px_rgba(212,175,55,0.4)]"
                   style={{ fontWeight: 800 }}
                 >
-                  MU <span className="text-gradient-gold">ORIGINS</span>
+                  eGiS-<span className="text-gradient-gold">MU</span>
                 </span>
                 <span className="block font-mono text-[9px] sm:text-[10px] tracking-[0.25em] text-white/50">
                   SEASON 6 EPISODE 3

@@ -1,6 +1,6 @@
-const en = {
+﻿const en = {
   locale: "en-US",
-  meta: { title: "MuOrigins S6E3 — Legends Never Die | Classic MU Online Private Server" },
+  meta: { title: "eGiS-MU S6E3 — Legends Never Die | Classic MU Online Private Server" },
   app: { skip: "Skip to content", mobileCta: "Play Free — Enter Lorencia", backTop: "Back to top" },
   nav: {
     rates: "Rates", classes: "Classes", siege: "Castle Siege", events: "Events", vip: "VIP", faq: "FAQ",
@@ -45,7 +45,7 @@ const en = {
     guilds: ["VENDETTA 👑 Castle Owners", "IronGuard — 38 members", "OldSchool — since 2005", "Nemesis — Siege Finalists", "Phoenix — Top PvP", "AfterLife — BC Speedrun #1", "Reborn — Fresh Realm Kings"],
     scroll: "SCROLL",
     scrollAria: "Scroll to server rates",
-    heroAlt: "Lorencia castle city at night — MuOrigins Season 6 Episode 3",
+    heroAlt: "Lorencia castle city at night — eGiS-MU Season 6 Episode 3",
   },
   features: {
     badge: "Server Rates • S6E3 Pure",
@@ -133,7 +133,7 @@ const en = {
     next: "Next testimonials",
     goto: "Go to page {n}",
     items: [
-      { role: "Guild Master • VENDETTA", quote: "Played GMO back in 2005. MuOrigins is the first server that actually FEELS like it. Rates are perfect, siege is packed, zero lag. I'm 34 with kids and I'm staying up for BC again." },
+      { role: "Guild Master • VENDETTA", quote: "Played GMO back in 2005. eGiS-MU is the first server that actually FEELS like it. Rates are perfect, siege is packed, zero lag. I'm 34 with kids and I'm staying up for BC again." },
       { role: "Top Elf • 42 Grand Resets", quote: "As an Elf main, I've been begging for a server that respects supports. Instant party invites, real economy, active Discord. Best MU community in years, no contest." },
       { role: "Arena Rank #1 • BK", quote: "The PvP balance here is insane. No P2W wings deciding duels — it's combo timing and build. Won 3 straight tournaments. Prize was actual WCoins. Legit." },
       { role: "Soul Master • Since Launch", quote: "Farmed my full +15 Exc set in 3 weeks. Drops are REAL. GMs actually ban cheaters same-day. 4,800+ online at peak and the market in Lorencia is alive again." },
@@ -159,12 +159,12 @@ const en = {
     h2a: "BEFORE YOU",
     h2b: "DIVE IN",
     items: [
-      { q: "Is MuOrigins really Season 6 Episode 3? No custom bloat?", a: "100% authentic S6E3 — Rage Fighter, socket system, 380lvl gear, Imperial Guardian, Doppelganger. We've added only QoL: off-attack, auto-party, in-game market search. No custom wings with +50k stats. Pure nostalgia, tuned for 2026." },
+      { q: "Is eGiS-MU really Season 6 Episode 3? No custom bloat?", a: "100% authentic S6E3 — Rage Fighter, socket system, 380lvl gear, Imperial Guardian, Doppelganger. We've added only QoL: off-attack, auto-party, in-game market search. No custom wings with +50k stats. Pure nostalgia, tuned for 2026." },
       { q: "Is it pay-to-win? Can I compete as a free player?", a: "No. The cash shop sells costumes, pets, VIP EXP/drop boosts and convenience only. Best-in-slot gear (Exc +15, 380lvl, socketed) drops exclusively in-game. Our #1 arena player is 100% free-to-play." },
       { q: "What are the rates? How long to max?", a: "EXP 50x (Master 40x), Drop 30%, Exc 25%. An active player hits 400 in ~2 days, first Reset in a week. Grand Resets keep it competitive long-term." },
       { q: "How many players online? Is it active?", a: "4,500–6,500 concurrent at EU/US peak, 28,000+ registered accounts. Lorencia market has 300+ shops daily, Blood Castle fills in minutes, Castle Siege pulls 300+ warriors weekly." },
       { q: "Can I play on a low-end PC / laptop?", a: "Yes. The S6E3 client is 2.1GB and runs on Intel HD graphics, 4GB RAM, any Windows 10/11. We also have a lite client (1.2GB). Mac/Linux via Wine guide in Discord." },
-      { q: "Wipe? Is my progress safe?", a: "No wipes planned — ever. We run 3 realms; Origins-2 is the newest (perfect for fresh starts). We publish uptime (99.97%) and back up daily." },
+      { q: "Wipe? Is my progress safe?", a: "No wipes planned — ever. We run 3 realms; eGiS-2 is the newest (perfect for fresh starts). We publish uptime (99.97%) and back up daily." },
       { q: "How do I start?", a: "1) Create account (30 sec) 2) Download client (2.1GB) 3) Launch and enter Lorencia. From click to killing spiders in Lorencia: under 5 minutes." },
     ],
     discordTitle: "Still unsure? Ask 12,400+ players live",
@@ -181,7 +181,7 @@ const en = {
       { t: "Download client", d: "2.1GB • Mega or MediaFire mirrors" },
       { t: "Enter the world", d: "Spawn in Lorencia immediately" },
     ],
-    client: "MUORIGINS S6E3 CLIENT",
+    client: "EGIS-MU S6E3 CLIENT",
     os: ["Windows", "Mac/Wine", "Lite 1.2GB"],
     download: "Download Full Client — 2.1GB",
     ready: "Download Ready ✓",
@@ -202,13 +202,13 @@ const en = {
       { h: "Community", links: ["Discord Server", "Guild Directory", "Castle Siege", "Tournaments", "Streamers", "Fan Kit"] },
       { h: "Support", links: ["Help Center", "Report Player", "Recover Account", "VIP & Donations", "Rules", "Contact GMs"] },
     ],
-    copyright: "© 2026 MuOrigins. Fan-run private server. Not affiliated with Webzen. MU Online is a trademark of its respective owner.",
+    copyright: "© 2026 eGiS-MU. Fan-run private server. Not affiliated with Webzen. MU Online is a trademark of its respective owner.",
     uptime: "99.97% uptime",
     madeA: "Made with",
     madeB: "by MU veterans",
   },
   modal: {
-    aria: "Create MuOrigins account",
+    aria: "Create eGiS-MU account",
     close: "Close",
     welcome: "WELCOME, {name}!",
     hero: "HERO",

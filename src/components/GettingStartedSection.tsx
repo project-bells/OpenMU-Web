@@ -128,7 +128,7 @@ export default function GettingStartedSection({ onRegister }: { onRegister: () =
         <div className="mt-10 flex flex-wrap items-center justify-center gap-6 text-xs text-white/50 border-t border-white/8 pt-8">
           <span className="flex items-center gap-2">
             <ShieldCheck className="h-4 w-4 text-emerald-400" />
-            <span>Origins GameGuard Anti-Cheat Protected</span>
+            <span>eGiS-MU GameGuard Anti-Cheat Protected</span>
           </span>
           <span>•</span>
           <span>Auto-Updating Patch Launcher</span>

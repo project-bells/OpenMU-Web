@@ -5,13 +5,13 @@ import { useI18n } from "../i18n";
 import { fetchCharacterRankings, fetchGuildRankings } from "../services/dbApi";
 
 const CLASS_BADGES: Record<string, { bg: string; text: string; border: string; name: string }> = {
-  DK: { bg: "bg-red-500/15", text: "text-red-400", border: "border-red-500/30", name: "Blade Master" },
-  DW: { bg: "bg-purple-500/15", text: "text-purple-400", border: "border-purple-500/30", name: "Grand Master" },
-  ELF: { bg: "bg-cyan-500/15", text: "text-cyan-400", border: "border-cyan-500/30", name: "High Elf" },
-  MG: { bg: "bg-orange-500/15", text: "text-orange-400", border: "border-orange-500/30", name: "Duel Master" },
-  DL: { bg: "bg-amber-500/15", text: "text-amber-400", border: "border-amber-500/30", name: "Lord Emperor" },
-  SUM: { bg: "bg-pink-500/15", text: "text-pink-400", border: "border-pink-500/30", name: "Dimension Master" },
-  RF: { bg: "bg-emerald-500/15", text: "text-emerald-400", border: "border-emerald-500/30", name: "Fist Master" },
+  DK: { bg: "bg-red-500/15", text: "text-red-400", border: "border-red-500/30", name: "Dark Knight" },
+  DW: { bg: "bg-purple-500/15", text: "text-purple-400", border: "border-purple-500/30", name: "Dark Wizard" },
+  ELF: { bg: "bg-cyan-500/15", text: "text-cyan-400", border: "border-cyan-500/30", name: "Fairy Elf" },
+  MG: { bg: "bg-orange-500/15", text: "text-orange-400", border: "border-orange-500/30", name: "Magic Gladiator" },
+  DL: { bg: "bg-amber-500/15", text: "text-amber-400", border: "border-amber-500/30", name: "Dark Lord" },
+  SUM: { bg: "bg-pink-500/15", text: "text-pink-400", border: "border-pink-500/30", name: "Summoner" },
+  RF: { bg: "bg-emerald-500/15", text: "text-emerald-400", border: "border-emerald-500/30", name: "Rage Fighter" },
 };
 
 export default function RankingSection() {
@@ -291,7 +291,7 @@ export default function RankingSection() {
                             >
                               <span>{char.classShort}</span>
                               <span className="text-[10px] opacity-75 font-normal hidden lg:inline">
-                                • {badge.name}
+                                • {char.className || badge.name}
                               </span>
                             </span>
                           </td>

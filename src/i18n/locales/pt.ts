@@ -1,8 +1,8 @@
-import type { Dict } from "./en";
+﻿import type { Dict } from "./en";
 
 const pt: Dict = {
   locale: "pt-BR",
-  meta: { title: "MuOrigins S6E3 — Lendas Nunca Morrem | Servidor Privado Clássico de MU Online" },
+  meta: { title: "eGiS-MU S6E3 — Lendas Nunca Morrem | Servidor Privado Clássico de MU Online" },
   app: { skip: "Pular para o conteúdo", mobileCta: "Jogue Grátis — 28K+ Heróis", backTop: "Voltar ao topo" },
   nav: {
     rates: "Rates", classes: "Classes", siege: "Castle Siege", events: "Eventos", vip: "VIP", faq: "FAQ",
@@ -11,7 +11,7 @@ const pt: Dict = {
     download: "Baixar",
     playFreeNow: "Jogar Grátis",
     playFree: "Jogar",
-    announce: "Novo realm Origins-2 aberto + Kit Inicial Grátis",
+    announce: "Novo realm eGiS-2 aberto + Kit Inicial Grátis",
     claim: "Resgatar →",
     openMenu: "Abrir menu",
     closeMenu: "Fechar menu",
@@ -47,7 +47,7 @@ const pt: Dict = {
     guilds: ["VENDETTA 👑 Donos do Castelo", "Immortals — 148 membros", "OldSchool — desde 2005", "NEMESIS — Finalistas do Siege", "Phoenix — Top PvP", "AfterLife — Speedrun BC #1", "Reborn — Reis do Realm Novo"],
     scroll: "ROLAR",
     scrollAria: "Ir para as rates do servidor",
-    heroAlt: "Cidade-castelo de Lorencia à noite — MuOrigins Season 6 Episode 3",
+    heroAlt: "Cidade-castelo de Lorencia à noite — eGiS-MU Season 6 Episode 3",
   },
   features: {
     badge: "Rates do Servidor • S6E3 Puro",
@@ -135,7 +135,7 @@ const pt: Dict = {
     next: "Próximos depoimentos",
     goto: "Ir para a página {n}",
     items: [
-      { role: "Guild Master • VENDETTA", quote: "Jogava MU em 2005. MuOrigins é o primeiro servidor que realmente PARECE aquilo. Rates perfeitas, siege lotado, zero lag. Tenho 34 anos, filhos, e de novo fico acordado esperando o BC." },
+      { role: "Guild Master • VENDETTA", quote: "Jogava MU em 2005. eGiS-MU é o primeiro servidor que realmente PARECE aquilo. Rates perfeitas, siege lotado, zero lag. Tenho 34 anos, filhos, e de novo fico acordado esperando o BC." },
       { role: "Top Elf • 42 Grand Resets", quote: "Como main Elf, eu implorava por um servidor que respeitasse suportes. Convites de party na hora, economia real, Discord ativo. Melhor comunidade de MU em anos." },
       { role: "Rank #1 da Arena • BK", quote: "O balanceamento de PvP aqui é insano. Nenhuma asa P2W decidindo duelo — é timing de combo e build. Ganhei 3 torneios seguidos. O prêmio foi WCoins de verdade." },
       { role: "Soul Master • Desde o Lançamento", quote: "Farmei meu set Exc +15 completo em 3 semanas. Os drops são REAIS. Os GMs banem cheaters no mesmo dia. 4.800+ online no pico e o mercado de Lorencia vivo de novo." },
@@ -161,12 +161,12 @@ const pt: Dict = {
     h2a: "ANTES DE",
     h2b: "MERGULHAR",
     items: [
-      { q: "O MuOrigins é mesmo Season 6 Episode 3? Sem customizações exageradas?", a: "S6E3 100% autêntico — Rage Fighter, sistema de socket, equipamentos 380, Imperial Guardian, Doppelganger. Adicionamos apenas qualidade de vida: off-attack, auto-party, busca de mercado no jogo. Nada de asas custom com +50k de status. Nostalgia pura, ajustada para 2026." },
+      { q: "O eGiS-MU é mesmo Season 6 Episode 3? Sem customizações exageradas?", a: "S6E3 100% autêntico — Rage Fighter, sistema de socket, equipamentos 380, Imperial Guardian, Doppelganger. Adicionamos apenas qualidade de vida: off-attack, auto-party, busca de mercado no jogo. Nada de asas custom com +50k de status. Nostalgia pura, ajustada para 2026." },
       { q: "É pay-to-win? Dá para competir jogando de graça?", a: "Não. A loja vende trajes, pets, boosts VIP de EXP/drop e conveniência. O melhor equipamento (Exc +15, 380, socket) dropa exclusivamente no jogo. Nosso #1 da arena é 100% free-to-play." },
       { q: "Quais são as rates? Quanto tempo para maximizar?", a: "EXP 50x (Master 40x), Drop 30%, Exc 25%. Um jogador ativo chega ao 400 em ~2 dias, primeiro Reset em uma semana. Grand Resets mantêm a competição a longo prazo." },
       { q: "Quantos jogadores online? Está ativo?", a: "4.500–6.500 simultâneos no pico, 28.000+ contas registradas. O mercado de Lorencia tem 300+ lojas por dia, o Blood Castle enche em minutos e o Castle Siege reúne 300+ guerreiros por semana." },
       { q: "Roda em PC fraco / notebook?", a: "Sim. O cliente S6E3 tem 2,1GB e roda em Intel HD, 4GB de RAM, Windows 10/11. Também temos um cliente lite (1,2GB). Mac/Linux via Wine com guia no Discord." },
-      { q: "Vai ter wipe? Meu progresso está seguro?", a: "Nenhum wipe planejado — nunca. Temos 3 realms; o Origins-2 é o mais novo (perfeito para começar do zero). Publicamos o uptime (99,97%) e fazemos backup diário." },
+      { q: "Vai ter wipe? Meu progresso está seguro?", a: "Nenhum wipe planejado — nunca. Temos 3 realms; o eGiS-2 é o mais novo (perfeito para começar do zero). Publicamos o uptime (99,97%) e fazemos backup diário." },
       { q: "Como eu começo?", a: "1) Crie a conta (30 seg) 2) Baixe o cliente (2,1GB) 3) Entre no Discord e pegue o kit inicial grátis (set +9 + pet de pickup por 7 dias). Do clique até matar aranhas em Lorencia: menos de 10 minutos." },
     ],
     discordTitle: "Ainda em dúvida? Pergunte a 12.400+ jogadores ao vivo",
@@ -183,7 +183,7 @@ const pt: Dict = {
       { t: "Baixar cliente", d: "2,1GB • 5 min na fibra" },
       { t: "Resgatar kit inicial", d: "Discord → #free-kit" },
     ],
-    client: "CLIENTE MUORIGINS S6E3",
+    client: "CLIENTE eGiS-MU S6E3",
     os: ["Windows", "Mac/Wine", "Lite 1,2GB"],
     download: "Baixar Cliente Completo — 2,1GB",
     ready: "Download Pronto ✓",
@@ -204,13 +204,13 @@ const pt: Dict = {
       { h: "Comunidade", links: ["Servidor do Discord", "Lista de Guilds", "Castle Siege", "Torneios", "Streamers", "Fan Kit"] },
       { h: "Suporte", links: ["Central de Ajuda", "Denunciar Jogador", "Recuperar Conta", "VIP e Doações", "Regras", "Falar com GMs"] },
     ],
-    copyright: "© 2026 MuOrigins. Servidor privado mantido por fãs. Não afiliado à Webzen. MU Online é marca registrada do respectivo proprietário.",
+    copyright: "© 2026 eGiS-MU. Servidor privado mantido por fãs. Não afiliado à Webzen. MU Online é marca registrada do respectivo proprietário.",
     uptime: "99,97% de uptime",
     madeA: "Feito com",
     madeB: "por veteranos de MU",
   },
   modal: {
-    aria: "Criar conta MuOrigins",
+    aria: "Criar conta eGiS-MU",
     close: "Fechar",
     welcome: "BEM-VINDO, {name}!",
     hero: "HERÓI",

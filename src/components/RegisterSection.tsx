@@ -178,7 +178,7 @@ export default function RegisterSection() {
                 {lang === "th" ? "สร้างไอดีสำเร็จแล้ว!" : "ACCOUNT CREATED!"}
               </h3>
               <p className="mt-2 text-sm text-white/70">
-                {lang === "th" ? "ยินดีต้อนรับสู่นักรบแห่ง MuOrigins S6E3" : "Welcome to MuOrigins S6E3"},{" "}
+                {lang === "th" ? "ยินดีต้อนรับสู่นักรบแห่ง eGiS-MU S6E3" : "Welcome to eGiS-MU S6E3"},{" "}
                 <span className="font-bold text-amber-300 font-mono text-base">{successData.account.toUpperCase()}</span>
               </p>
 
@@ -515,7 +515,7 @@ export default function RegisterSection() {
                   className="mt-0.5 h-4 w-4 rounded border-white/20 bg-white/5 text-amber-400 focus:ring-amber-400"
                 />
                 <span className="text-xs text-white/60 leading-relaxed">
-                  I agree to the MuOrigins Fair Play Policy (no botting, no speedhacks, respectful chat).
+                  I agree to the eGiS-MU Fair Play Policy (no botting, no speedhacks, respectful chat).
                 </span>
               </label>
 

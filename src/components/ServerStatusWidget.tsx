@@ -156,7 +156,7 @@ export default function ServerStatusWidget() {
             <div className="min-w-0">
               <div className="flex items-center gap-2">
                 <span className="font-display text-sm font-bold text-white">
-                  Origins GameGuard
+                  eGiS-MU GameGuard
                 </span>
                 <span className="rounded bg-emerald-500/15 border border-emerald-500/30 px-1.5 py-0.5 text-[10px] font-bold text-emerald-400">
                   ACTIVE

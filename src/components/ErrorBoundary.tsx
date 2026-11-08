@@ -21,7 +21,7 @@ export default class ErrorBoundary extends Component<Props, State> {
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error("[MU Origins] Uncaught error captured by ErrorBoundary:", error, errorInfo);
+    console.error("[eGiS-MU] Uncaught error captured by ErrorBoundary:", error, errorInfo);
   }
 
   private handleReset = () => {

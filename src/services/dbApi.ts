@@ -83,7 +83,7 @@ export async function fetchServerStatus(): Promise<ServerStatusData> {
         const realms: RealmData[] = rawRealms
           ? rawRealms.map((r: any, idx: number) => ({
               id: typeof r.id === "number" ? r.id : idx,
-              name: r.name || `Origins-${idx + 1}`,
+              name: r.name || `eGiS-${idx + 1}`,
               loadPct: typeof r.loadPct === "number" ? r.loadPct : Math.min(100, Math.round(((r.online || 0) / (r.max || 2500)) * 100)),
               online: typeof r.online === "number" ? r.online : 0,
               max: typeof r.max === "number" ? r.max : 2500,
@@ -91,19 +91,19 @@ export async function fetchServerStatus(): Promise<ServerStatusData> {
               pvp: typeof r.pvp === "boolean" ? r.pvp : true,
             }))
           : [
-              { name: "Origins-1 (PvP & Market)", loadPct: 86, online: 2420, max: 2500, status: "Normal", pvp: true },
-              { name: "Origins-2 (Non-PvP)", loadPct: 62, online: 1680, max: 2500, status: "Normal", pvp: false },
-              { name: "Origins-3 (Sub-Server)", loadPct: 41, online: 792, max: 2000, status: "Normal", pvp: true },
+              { name: "eGiS-1 (PvP & Market)", loadPct: 86, online: 2420, max: 2500, status: "Normal", pvp: true },
+              { name: "eGiS-2 (Non-PvP)", loadPct: 62, online: 1680, max: 2500, status: "Normal", pvp: false },
+              { name: "eGiS-3 (Sub-Server)", loadPct: 41, online: 792, max: 2000, status: "Normal", pvp: true },
             ];
 
         return {
-          serverName: data.serverName || "MuOrigins S6E3",
+          serverName: data.serverName || "eGiS-MU S6E3",
           version: data.version || "Season 6 Episode 3",
           status: (data.state || data.status || "ONLINE").toUpperCase(),
           onlineCount,
           serverTime: `${utc7} (UTC+7 Bangkok)`,
           uptime: data.uptime || "99.98%",
-          antiCheat: data.antiCheat || "Origins GameGuard 100% Active",
+          antiCheat: data.antiCheat || "eGiS-MU GameGuard 100% Active",
           totalAccounts: data.totalAccounts || 28420,
           realms,
           onlineExchange: data.onlineExchange || {
@@ -122,18 +122,18 @@ export async function fetchServerStatus(): Promise<ServerStatusData> {
 
   // Resilient fallback
   return {
-    serverName: "MuOrigins S6E3",
+    serverName: "eGiS-MU S6E3",
     version: "Season 6 Episode 3",
     status: "ONLINE",
     onlineCount: 4892,
     serverTime: `${utc7} (UTC+7 Bangkok)`,
     uptime: "99.98%",
-    antiCheat: "Origins GameGuard 100% Active",
+    antiCheat: "eGiS-MU GameGuard 100% Active",
     totalAccounts: 28420,
     realms: [
-      { name: "Origins-1 (PvP & Market)", loadPct: 86, online: 2420, max: 2500, status: "Normal", pvp: true },
-      { name: "Origins-2 (Non-PvP)", loadPct: 62, online: 1680, max: 2500, status: "Normal", pvp: false },
-      { name: "Origins-3 (Sub-Server)", loadPct: 41, online: 792, max: 2000, status: "Normal", pvp: true },
+      { name: "eGiS-1 (PvP & Market)", loadPct: 86, online: 2420, max: 2500, status: "Normal", pvp: true },
+      { name: "eGiS-2 (Non-PvP)", loadPct: 62, online: 1680, max: 2500, status: "Normal", pvp: false },
+      { name: "eGiS-3 (Sub-Server)", loadPct: 41, online: 792, max: 2000, status: "Normal", pvp: true },
     ],
     onlineExchange: {
       creditsPerHour: 10,

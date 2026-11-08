@@ -89,7 +89,7 @@ export default function HighlightsSection() {
         <div className="mx-auto max-w-3xl text-center mb-16">
           <div className="inline-flex items-center gap-2 rounded-full border border-amber-400/30 bg-amber-400/10 px-4 py-1.5 text-xs font-bold tracking-[0.2em] text-amber-300 uppercase">
             <Sparkles className="h-3.5 w-3.5" />
-            <span>{lang === "th" ? "3 จุดเด่นหลักของเซิร์ฟเวอร์" : "The Three Pillars of MuOrigins"}</span>
+            <span>{lang === "th" ? "3 จุดเด่นหลักของเซิร์ฟเวอร์" : "The Three Pillars of eGiS-MU"}</span>
           </div>
           <h2 className="font-display mt-4 text-3xl font-black tracking-tight text-white sm:text-5xl">
             {lang === "th" ? "สร้างโดยผู้เล่นตัวจริง" : "BUILT FOR VETERANS."} <br />

@@ -73,7 +73,7 @@ export default function EcosystemSection() {
             <span>Community & Resources</span>
           </div>
           <h2 className="font-display mt-4 text-3xl font-black tracking-tight text-white sm:text-5xl">
-            THE MUORIGINS <span className="text-gradient-gold">ECOSYSTEM</span>
+            THE eGiS-MU <span className="text-gradient-gold">ECOSYSTEM</span>
           </h2>
           <p className="mt-4 text-sm text-white/60 sm:text-base leading-relaxed">
             Everything you need outside the game client—from our transparent Web Shop to our vibrant 12,400+ Discord community and comprehensive game guides.
