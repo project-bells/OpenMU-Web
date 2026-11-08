@@ -70,7 +70,7 @@ export interface CharacterRankItem {
   name: string;
   classId: ClassId;
   className: string;
-  classShort: "DK" | "DW" | "ELF" | "MG" | "DL" | "SUM" | "RF";
+  classShort: string;
   level: number;
   masterLevel: number;
   resets: number;

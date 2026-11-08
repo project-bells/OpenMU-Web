@@ -17,6 +17,7 @@ import Faq from "./components/Faq";
 import FinalCta from "./components/FinalCta";
 import Footer from "./components/Footer";
 import RegisterModal from "./components/RegisterModal";
+import LoginModal from "./components/LoginModal";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { useGlobalReveal } from "./hooks/hooks";
 import { I18nProvider, useI18n } from "./i18n";
@@ -69,7 +70,9 @@ function BackToTop() {
 function Page() {
   const { t } = useI18n();
   const [modal, setModal] = useState(false);
+  const [loginModal, setLoginModal] = useState(false);
   const openRegister = () => setModal(true);
+  const openLogin = () => setLoginModal(true);
   useGlobalReveal();
 
   return (
@@ -80,10 +83,10 @@ function Page() {
       >
         {t.app.skip}
       </a>
-      <Navbar onRegister={openRegister} />
+      <Navbar onRegister={openRegister} onLogin={openLogin} />
       <main>
         {/* Section 1: Hero */}
-        <Hero onRegister={openRegister} />
+        <Hero onRegister={openRegister} onLogin={openLogin} />
 
         {/* Section 2: Server Live Status & Stats */}
         <ServerStatusWidget />
@@ -92,7 +95,7 @@ function Page() {
         <Features />
 
         {/* Online-to-Credits & WCoin Exchange System (id="online-rewards") */}
-        <OnlineExchangeSection onRegister={openRegister} />
+        <OnlineExchangeSection onRegister={openRegister} onLogin={openLogin} />
 
         {/* Section 3: 3 Key Highlights */}
         <HighlightsSection />
@@ -104,7 +107,7 @@ function Page() {
         <RankingSection />
 
         {/* Section 5: Ecosystem & External Links */}
-        <EcosystemSection />
+        <EcosystemSection onLogin={openLogin} />
 
         {/* Lore, Class Trees, Siege & FAQ */}
         <Classes onRegister={openRegister} />
@@ -113,10 +116,15 @@ function Page() {
         <Faq />
 
         {/* Section 6: Footer CTA */}
-        <FinalCta onRegister={openRegister} />
+        <FinalCta onRegister={openRegister} onLogin={openLogin} />
       </main>
-      <Footer onRegister={openRegister} />
+      <Footer onRegister={openRegister} onLogin={openLogin} />
       <RegisterModal open={modal} onClose={() => setModal(false)} />
+      <LoginModal
+        open={loginModal}
+        onClose={() => setLoginModal(false)}
+        onSwitchToRegister={openRegister}
+      />
       <StickyMobileCta onRegister={openRegister} />
       <BackToTop />
     </div>

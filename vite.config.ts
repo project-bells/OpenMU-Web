@@ -7,8 +7,27 @@ import { defineConfig } from "vite";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+function getUpstreamTarget() {
+  const base = (
+    process.env.DEV_API_TARGET ||
+    process.env.OPENMU_API_URL ||
+    process.env.OPENMU_GATEWAY_URL ||
+    "http://127.0.0.1:8080"
+  ).replace(/\/+$/, "");
+  const headers: Record<string, string> = { Accept: "application/json" };
+  if (process.env.OPENMU_API_KEY) {
+    headers["X-Api-Key"] = process.env.OPENMU_API_KEY;
+  }
+  return { base, headers };
+}
+
 function openMuDevApiPlugin() {
   const registeredAccounts = new Set(["admin", "test", "muonline"]);
+  const accountBalances = new Map<string, { credits: number; wcoin: number; onlineHours: number }>([
+    ["admin", { credits: 450, wcoin: 300, onlineHours: 90 }],
+    ["test", { credits: 250, wcoin: 100, onlineHours: 50 }],
+    ["muonline", { credits: 500, wcoin: 250, onlineHours: 100 }],
+  ]);
   const ipRateMap = new Map<string, { count: number; resetTime: number }>();
   const MAX_BODY_BYTES = 10 * 1024; // 10KB limit
 
@@ -21,9 +40,9 @@ function openMuDevApiPlugin() {
         res.setHeader("Content-Type", "application/json");
         res.setHeader("Cache-Control", "no-cache");
 
-        const targetBase = process.env.OPENMU_GATEWAY_URL || "http://127.0.0.1:8080";
+        const { base, headers } = getUpstreamTarget();
         try {
-          const upstreamRes = await fetch(`${targetBase}${req.originalUrl || req.url}`);
+          const upstreamRes = await fetch(`${base}${req.originalUrl || req.url}`, { headers });
           if (upstreamRes.ok) {
             const data = await upstreamRes.json();
             res.statusCode = 200;
@@ -44,17 +63,17 @@ function openMuDevApiPlugin() {
         }).format(now);
 
         const data = {
-          serverName: "MuOrigins S6E3",
+          serverName: "eGiS-MU S6E3",
           version: "Season 6 Episode 3",
           status: "ONLINE",
           onlineCount: 0,
           serverTime: `${utc7Time} (UTC+7 Bangkok)`,
           uptime: "0h 0m",
-          antiCheat: "Origins GameGuard 100% Active",
+          antiCheat: "eGiS-MU GameGuard 100% Active",
           totalAccounts: registeredAccounts.size,
           realms: [],
           onlineExchange: {
-            creditsPerHour: 10,
+            creditsPerHour: 5,
             creditToWcoinRatio: 0.5,
             ratioDescription: "100 Credits = 50 WCoin",
             minExchange: 100,
@@ -66,15 +85,15 @@ function openMuDevApiPlugin() {
         res.end(JSON.stringify(data));
       });
 
-      // 2. Rankings Characters API (proxied to server database only)
+      // 2. Rankings Characters API (proxied to server database)
       server.middlewares.use("/api/rankings/characters", async (req: any, res: any) => {
         res.setHeader("X-Content-Type-Options", "nosniff");
         res.setHeader("Content-Type", "application/json");
-        res.setHeader("Cache-Control", "no-cache");
+        res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
 
-        const targetBase = process.env.OPENMU_GATEWAY_URL || "http://127.0.0.1:8080";
+        const { base, headers } = getUpstreamTarget();
         try {
-          const upstreamRes = await fetch(`${targetBase}${req.originalUrl || req.url}`);
+          const upstreamRes = await fetch(`${base}${req.originalUrl || req.url}`, { headers });
           if (upstreamRes.ok) {
             const data = await upstreamRes.json();
             res.statusCode = 200;
@@ -89,15 +108,15 @@ function openMuDevApiPlugin() {
         res.end(JSON.stringify({ total: 0, characters: [] }));
       });
 
-      // 3. Rankings Guilds API (proxied to server database only)
+      // 3. Rankings Guilds API (proxied to server database)
       server.middlewares.use("/api/rankings/guilds", async (req: any, res: any) => {
         res.setHeader("X-Content-Type-Options", "nosniff");
         res.setHeader("Content-Type", "application/json");
-        res.setHeader("Cache-Control", "no-cache");
+        res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
 
-        const targetBase = process.env.OPENMU_GATEWAY_URL || "http://127.0.0.1:8080";
+        const { base, headers } = getUpstreamTarget();
         try {
-          const upstreamRes = await fetch(`${targetBase}${req.originalUrl || req.url}`);
+          const upstreamRes = await fetch(`${base}${req.originalUrl || req.url}`, { headers });
           if (upstreamRes.ok) {
             const data = await upstreamRes.json();
             res.statusCode = 200;
@@ -112,14 +131,16 @@ function openMuDevApiPlugin() {
         res.end(JSON.stringify({ total: 0, guilds: [] }));
       });
 
-      // 4. Online-to-Credit & WCoin Exchange System API
+      // 4. Online-to-Credit & WCoin Exchange System API (1 Hr = 5 Credits, 100 Credits = 50 WCoin)
       server.middlewares.use("/api/rewards/online-exchange", (req: any, res: any) => {
         res.setHeader("X-Content-Type-Options", "nosniff");
         res.setHeader("Content-Type", "application/json");
 
         if (req.method === "POST") {
           let body = "";
-          req.on("data", (chunk: Buffer) => { body += chunk.toString("utf-8"); });
+          req.on("data", (chunk: Buffer) => {
+            body += chunk.toString("utf-8");
+          });
           req.on("end", () => {
             try {
               const payload = JSON.parse(body || "{}");
@@ -139,15 +160,24 @@ function openMuDevApiPlugin() {
               }
 
               const wcoinReceived = Math.floor(credits * 0.5);
+              const lowerAcc = account.toLowerCase();
+              const current = accountBalances.get(lowerAcc) || { credits: 300, wcoin: 100, onlineHours: 60 };
+              current.credits = Math.max(0, current.credits - credits);
+              current.wcoin += wcoinReceived;
+              accountBalances.set(lowerAcc, current);
 
               res.statusCode = 200;
-              res.end(JSON.stringify({
-                success: true,
-                account,
-                deductedCredits: credits,
-                wcoinReceived,
-                message: `Exchanged ${credits} Credits into ${wcoinReceived} WCoin successfully! Sent to in-game Cash Shop & Web Shop balance.`,
-              }));
+              res.end(
+                JSON.stringify({
+                  success: true,
+                  account,
+                  deductedCredits: credits,
+                  wcoinReceived,
+                  remainingCredits: current.credits,
+                  newWcoinBalance: current.wcoin,
+                  message: `Exchanged ${credits} Credits into ${wcoinReceived} WCoin successfully! Sent to in-game Cash Shop (X) balance.`,
+                })
+              );
             } catch {
               res.statusCode = 400;
               res.end(JSON.stringify({ error: "Invalid JSON payload." }));
@@ -157,24 +187,83 @@ function openMuDevApiPlugin() {
         }
 
         res.statusCode = 200;
-        res.end(JSON.stringify({
-          enabled: true,
-          creditsPerHour: 10,
-          rateFormula: "1 Hour Online = 10 Credits",
-          exchangeRate: "100 Credits = 50 WCoin",
-          minExchangeCredits: 100,
-          webShopUrl: "https://webshop.muorigins.online",
-          stats: {
-            totalCreditsDistributed: 845200,
-            totalWcoinExchanged: 395100,
-            activeMiners: 3870,
-          },
-        }));
+        res.end(
+          JSON.stringify({
+            enabled: true,
+            creditsPerHour: 5,
+            rateFormula: "1 Hour Online = 5 Credits",
+            exchangeRate: "100 Credits = 50 WCoin",
+            minExchangeCredits: 100,
+            stats: {
+              totalCreditsDistributed: 845200,
+              totalWcoinExchanged: 395100,
+              activeMiners: 3870,
+            },
+          })
+        );
       });
 
-      // 5. Account Registration API
+      // 5. Account Login API
+      server.middlewares.use("/api/account/login", (req: any, res: any) => {
+        res.setHeader("X-Content-Type-Options", "nosniff");
+        res.setHeader("Content-Type", "application/json");
+        res.setHeader("Cache-Control", "no-store");
+
+        if (req.method !== "POST") {
+          res.statusCode = 405;
+          res.setHeader("Allow", "POST");
+          res.end(JSON.stringify({ error: "Method Not Allowed. Use POST." }));
+          return;
+        }
+
+        let body = "";
+        req.on("data", (chunk: Buffer) => {
+          body += chunk.toString("utf-8");
+        });
+        req.on("end", () => {
+          try {
+            const data = JSON.parse(body || "{}");
+            const rawUser = (data.loginName || data.username || "").toString().trim();
+            const rawPass = (data.password || "").toString();
+
+            if (!rawUser || !rawPass) {
+              res.statusCode = 400;
+              res.end(JSON.stringify({ error: "Username and password are required." }));
+              return;
+            }
+
+            if (rawUser.length < 3 || rawUser.length > 10 || rawPass.length < 4) {
+              res.statusCode = 401;
+              res.end(JSON.stringify({ error: "Invalid username or password." }));
+              return;
+            }
+
+            const lower = rawUser.toLowerCase();
+            if (!accountBalances.has(lower)) {
+              accountBalances.set(lower, { credits: 250, wcoin: 100, onlineHours: 50 });
+            }
+            const bal = accountBalances.get(lower)!;
+
+            res.statusCode = 200;
+            res.end(
+              JSON.stringify({
+                success: true,
+                account: rawUser,
+                credits: bal.credits,
+                wcoin: bal.wcoin,
+                onlineHours: bal.onlineHours,
+                creditsPerHour: 5,
+              })
+            );
+          } catch {
+            res.statusCode = 400;
+            res.end(JSON.stringify({ error: "Invalid JSON payload." }));
+          }
+        });
+      });
+
+      // 6. Account Registration API
       server.middlewares.use("/api/account/register", (req: any, res: any) => {
-        // Enforce Security Headers
         res.setHeader("X-Content-Type-Options", "nosniff");
         res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
 
@@ -186,8 +275,8 @@ function openMuDevApiPlugin() {
           return;
         }
 
-        // Basic sliding window rate limiting: 20 requests per minute per IP
-        const clientIp = req.headers["x-forwarded-for"]?.toString().split(",")[0].trim() || req.socket.remoteAddress || "127.0.0.1";
+        const clientIp =
+          req.headers["x-forwarded-for"]?.toString().split(",")[0].trim() || req.socket.remoteAddress || "127.0.0.1";
         const now = Date.now();
         const rateRecord = ipRateMap.get(clientIp);
 
@@ -230,7 +319,6 @@ function openMuDevApiPlugin() {
             const rawPass = (data.password || "").toString();
             const rawEmail = (data.email || "").toString().trim();
 
-            // Strict Server-Side Validation
             if (!rawUser || rawUser.length < 4 || rawUser.length > 10 || !/^[a-zA-Z0-9]+$/.test(rawUser)) {
               res.statusCode = 400;
               res.setHeader("Content-Type", "application/json");
@@ -238,14 +326,14 @@ function openMuDevApiPlugin() {
               return;
             }
 
-            if (!rawPass || rawPass.length < 8 || rawPass.length > 64) {
+            if (!rawPass || rawPass.length < 6 || rawPass.length > 64) {
               res.statusCode = 400;
               res.setHeader("Content-Type", "application/json");
-              res.end(JSON.stringify({ error: "Password must be between 8 and 64 characters." }));
+              res.end(JSON.stringify({ error: "Password must be between 6 and 64 characters." }));
               return;
             }
 
-            const rawPersonalCode = (data.personalCode || data.securityCode || "").toString().trim();
+            const rawPersonalCode = (data.personalCode || data.securityCode || "1234567").toString().trim();
 
             if (!rawEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(rawEmail)) {
               res.statusCode = 400;
@@ -270,6 +358,7 @@ function openMuDevApiPlugin() {
             }
 
             registeredAccounts.add(lowerUser);
+            accountBalances.set(lowerUser, { credits: 50, wcoin: 0, onlineHours: 10 });
             res.statusCode = 200;
             res.setHeader("Content-Type", "application/json");
             res.end(

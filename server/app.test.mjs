@@ -108,6 +108,69 @@ test("character and guild rankings proxy to OpenMU and return data", async (cont
   assert.equal(guildsBody.guilds[0].name, "ORIGINS");
 });
 
+test("character rankings normalize OpenMU class numbers, GUIDs, 3rd classes, and StatAttributes", async (context) => {
+  const upstream = await listen((request, response) => {
+    response.writeHead(200, { "Content-Type": "application/json" });
+    if (request.url.startsWith("/api/rankings/characters")) {
+      response.end(JSON.stringify({
+        total: 3,
+        characters: [
+          {
+            name: "ArchMage",
+            className: "Grand Master",
+            classShort: "DK", // upstream broken fallback
+            attributes: [
+              { definition: { id: "560931ad-0901-4342-b7f4-fd2e2f056332", designation: "Level" }, value: 398 },
+              { definition: { id: "70cd8c10-391a-4c51-9aa4-a8d4600e3a9f", designation: "Master Level" }, value: 185 },
+              { definition: { id: "89a891a7-f9f9-4ab5-af36-12056e53a5f7", designation: "Resets" }, value: 42 },
+            ],
+          },
+          {
+            name: "EmperorDL",
+            characterClassId: "00000000-0000-0001-0000-000000000017",
+            cLevel: "400",
+            mLevel: "120",
+            resets: "30",
+          },
+          {
+            name: "ElfQueen",
+            characterClassNumber: 11,
+            level: 365,
+          },
+        ],
+      }));
+    } else {
+      response.writeHead(404).end();
+    }
+  });
+  const gateway = await listen(createHandler({ apiUrl: upstream.url, apiKey: "x".repeat(32), trustProxy: false, requestTimeoutMs: 1000 }));
+  context.after(() => { gateway.server.close(); upstream.server.close(); });
+
+  const res = await fetch(`${gateway.url}/api/rankings/characters`);
+  assert.equal(res.status, 200);
+  const body = await res.json();
+  assert.equal(body.characters.length, 3);
+
+  assert.equal(body.characters[0].classId, "dw");
+  assert.equal(body.characters[0].classShort, "GM");
+  assert.equal(body.characters[0].className, "Grand Master");
+  assert.equal(body.characters[0].level, 398);
+  assert.equal(body.characters[0].masterLevel, 185);
+  assert.equal(body.characters[0].resets, 42);
+
+  assert.equal(body.characters[1].classId, "dl");
+  assert.equal(body.characters[1].classShort, "LE");
+  assert.equal(body.characters[1].className, "Lord Emperor");
+  assert.equal(body.characters[1].level, 400);
+  assert.equal(body.characters[1].masterLevel, 120);
+
+  assert.equal(body.characters[2].classId, "elf");
+  assert.equal(body.characters[2].classShort, "HE");
+  assert.equal(body.characters[2].className, "High Elf");
+  assert.equal(body.characters[2].level, 365);
+  assert.equal(body.characters[2].masterLevel, 0);
+});
+
 test("unhandled api paths return 404 JSON instead of HTML fallback", async (context) => {
   const gateway = await listen(createHandler({ apiUrl: "http://127.0.0.1:9", apiKey: "x".repeat(32), trustProxy: false, requestTimeoutMs: 1000 }));
   context.after(() => { gateway.server.close(); });
