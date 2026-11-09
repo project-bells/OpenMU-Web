@@ -181,3 +181,59 @@ test("unhandled api paths return 404 JSON instead of HTML fallback", async (cont
   const body = await result.json();
   assert.deepEqual(body, { error: "Not found." });
 });
+
+test("users search returns matching users for autocomplete", async (context) => {
+  const gateway = await listen(createHandler({ apiUrl: "http://127.0.0.1:9", apiKey: "x".repeat(32), trustProxy: false, requestTimeoutMs: 1000 }));
+  context.after(() => { gateway.server.close(); });
+
+  const result = await fetch(`${gateway.url}/api/users/search?q=wizard`);
+  assert.equal(result.status, 200);
+  const body = await result.json();
+  assert.equal(body.success, true);
+  assert.ok(Array.isArray(body.users));
+  assert.ok(body.users.some((u) => u.username === "magic_wizard"));
+});
+
+test("admin grant balance validates permissions and updates player balance", async (context) => {
+  const gateway = await listen(createHandler({ apiUrl: "http://127.0.0.1:9", apiKey: "x".repeat(32), trustProxy: false, requestTimeoutMs: 1000 }));
+  context.after(() => { gateway.server.close(); });
+
+  // Non-admin rejected
+  const rejected = await fetch(`${gateway.url}/api/admin/grant-balance`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ adminUser: "player1", targetUser: "lorencia_pro", credits: 100, wcoin: 50 }),
+  });
+  assert.equal(rejected.status, 403);
+
+  // Admin approved
+  const approved = await fetch(`${gateway.url}/api/admin/grant-balance`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ adminUser: "admin", targetUser: "lorencia_pro", credits: 500, wcoin: 200, note: "Test Reward" }),
+  });
+  assert.equal(approved.status, 200);
+  const data = await approved.json();
+  assert.equal(data.success, true);
+  assert.equal(data.targetUser, "lorencia_pro");
+  assert.equal(data.addedCredits, 500);
+  assert.equal(data.addedWcoin, 200);
+});
+
+test("player topup donation processes harmonized package bonus", async (context) => {
+  const gateway = await listen(createHandler({ apiUrl: "http://127.0.0.1:9", apiKey: "x".repeat(32), trustProxy: false, requestTimeoutMs: 1000 }));
+  context.after(() => { gateway.server.close(); });
+
+  const result = await fetch(`${gateway.url}/api/topup/donate`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username: "lorencia_pro", packageId: "tier-300", channel: "truemoney" }),
+  });
+  assert.equal(result.status, 200);
+  const body = await result.json();
+  assert.equal(body.success, true);
+  assert.equal(body.addedCredits, 2160);
+  assert.equal(body.addedWcoin, 650);
+  assert.ok(body.txnId.startsWith("TXN-"));
+});
+

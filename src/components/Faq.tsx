@@ -12,12 +12,11 @@ export default function Faq() {
       <div className="mx-auto max-w-4xl px-4 sm:px-6">
         <div className="reveal mx-auto max-w-2xl text-center">
           <span className="glass inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-bold tracking-[0.22em] text-violet-200 uppercase">
-            <HelpCircle className="h-3.5 w-3.5" /> {fq.eyebrow}
+            <HelpCircle className="h-3.5 w-3.5" /> {fq.badge}
           </span>
           <h2 className="font-display mt-5 text-3xl font-black tracking-tight text-white sm:text-5xl">
-            {fq.title} <span className="text-gradient-arcane">{fq.titleAccent}</span>
+            {fq.h2a} <span className="text-gradient-arcane">{fq.h2b}</span>
           </h2>
-          <p className="mt-3 text-sm text-white/60 sm:text-base">{fq.sub}</p>
         </div>
 
         <div className="mt-10 space-y-3">
@@ -78,8 +77,8 @@ export default function Faq() {
               <MessageCircle className="h-5 w-5" />
             </span>
             <div className="text-sm">
-              <p className="font-bold text-white">{t.ecosystem.card2Title}</p>
-              <p className="text-white/55">{t.ecosystem.card2Desc}</p>
+              <p className="font-bold text-white">{fq.discordTitle}</p>
+              <p className="text-white/55">{fq.discordSub}</p>
             </div>
           </div>
           <a
@@ -88,7 +87,7 @@ export default function Faq() {
             rel="noopener noreferrer"
             className="btn-shine w-full shrink-0 rounded-xl bg-[#5865F2] px-6 py-3 text-center text-sm font-extrabold text-white shadow-lg shadow-indigo-500/30 transition hover:brightness-110 sm:w-auto"
           >
-            {t.ecosystem.card2Cta}
+            {fq.discordCta}
           </a>
         </div>
       </div>

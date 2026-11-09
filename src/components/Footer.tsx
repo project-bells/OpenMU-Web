@@ -1,5 +1,5 @@
 import { useI18n } from "../i18n";
-import { LogIn, UserPlus, Download, Trophy, Coins } from "lucide-react";
+import { LogIn, UserPlus, Heart } from "lucide-react";
 
 export default function Footer({
   onRegister,
@@ -27,116 +27,71 @@ export default function Footer({
                 eGiS-<span className="text-amber-400">MU</span>
               </span>
             </a>
-            <p className="mt-3 text-xs leading-relaxed text-white/50">{ft.desc}</p>
+            <p className="mt-3 text-xs leading-relaxed text-white/50">{ft.tagline}</p>
+            <div className="mt-4 flex flex-col gap-2">
+              <button
+                type="button"
+                onClick={onRegister}
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-300 hover:text-white"
+              >
+                <UserPlus className="h-3.5 w-3.5" />
+                <span>{ft.start}</span>
+              </button>
+              <button
+                type="button"
+                onClick={onLogin}
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-white/70 hover:text-amber-300"
+              >
+                <LogIn className="h-3.5 w-3.5 text-amber-400" />
+                <span>{ft.login}</span>
+              </button>
+            </div>
           </div>
 
-          {/* Navigation Column */}
-          <div>
-            <h4 className="font-display text-xs font-bold tracking-wider text-amber-300 uppercase">
-              {ft.colNav}
-            </h4>
-            <ul className="mt-3 space-y-2 text-xs text-white/65">
-              <li>
-                <a href="#rates" className="transition hover:text-amber-300">
-                  {t.nav.features}
-                </a>
-              </li>
-              <li>
-                <a href="#classes" className="transition hover:text-amber-300">
-                  {t.nav.classes}
-                </a>
-              </li>
-              <li>
-                <a href="#siege" className="transition hover:text-amber-300">
-                  {t.nav.siege}
-                </a>
-              </li>
-              <li>
-                <a href="#events" className="transition hover:text-amber-300">
-                  {t.nav.events}
-                </a>
-              </li>
-              <li>
-                <a href="#faq" className="transition hover:text-amber-300">
-                  {t.nav.faq}
-                </a>
-              </li>
-            </ul>
-          </div>
-
-          {/* Account & Portal Column */}
-          <div>
-            <h4 className="font-display text-xs font-bold tracking-wider text-amber-300 uppercase">
-              {ft.colAccount}
-            </h4>
-            <ul className="mt-3 space-y-2 text-xs text-white/65">
-              <li>
-                <button
-                  type="button"
-                  onClick={onRegister}
-                  className="inline-flex items-center gap-1.5 font-semibold text-amber-300 transition hover:text-white"
-                >
-                  <UserPlus className="h-3.5 w-3.5" />
-                  <span>{ft.linkRegister}</span>
-                </button>
-              </li>
-              <li>
-                <button
-                  type="button"
-                  onClick={onLogin}
-                  className="inline-flex items-center gap-1.5 font-semibold text-white/80 transition hover:text-amber-300"
-                >
-                  <LogIn className="h-3.5 w-3.5 text-amber-400" />
-                  <span>{ft.linkLogin}</span>
-                </button>
-              </li>
-              <li>
-                <a
-                  href="#download"
-                  className="inline-flex items-center gap-1.5 transition hover:text-amber-300"
-                >
-                  <Download className="h-3.5 w-3.5 text-amber-400" />
-                  <span>{ft.linkDownload}</span>
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#ranking"
-                  className="inline-flex items-center gap-1.5 transition hover:text-amber-300"
-                >
-                  <Trophy className="h-3.5 w-3.5 text-amber-400" />
-                  <span>{ft.linkRanking}</span>
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#online-rewards"
-                  className="inline-flex items-center gap-1.5 transition hover:text-amber-300"
-                >
-                  <Coins className="h-3.5 w-3.5 text-amber-400" />
-                  <span>{ft.linkExchange}</span>
-                </a>
-              </li>
-            </ul>
-          </div>
-
-          {/* Server Info Column */}
-          <div>
-            <h4 className="font-display text-xs font-bold tracking-wider text-amber-300 uppercase">
-              {ft.colInfo}
-            </h4>
-            <ul className="mt-3 space-y-2 font-mono text-xs text-white/60">
-              <li>{ft.infoVersion}</li>
-              <li>{ft.infoExp}</li>
-              <li className="text-amber-300">{ft.infoOnlineReward}</li>
-              <li>{ft.infoSiege}</li>
-            </ul>
-          </div>
+          {/* Dynamic Columns from locale */}
+          {ft.cols.map((col, idx) => (
+            <div key={`${col.h}-${idx}`}>
+              <h4 className="font-display text-xs font-bold tracking-wider text-amber-300 uppercase">
+                {col.h}
+              </h4>
+              <ul className="mt-3 space-y-2 text-xs text-white/65">
+                {col.links.map((link, linkIdx) => (
+                  <li key={`${link}-${linkIdx}`}>
+                    {link === "Account Login" ? (
+                      <button
+                        type="button"
+                        onClick={onLogin}
+                        className="transition hover:text-amber-300"
+                      >
+                        {link}
+                      </button>
+                    ) : link === "Create Account" ? (
+                      <button
+                        type="button"
+                        onClick={onRegister}
+                        className="transition hover:text-amber-300"
+                      >
+                        {link}
+                      </button>
+                    ) : (
+                      <a href="#top" className="transition hover:text-amber-300">
+                        {link}
+                      </a>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </div>
 
         <div className="mt-10 flex flex-col items-center justify-between gap-3 border-t border-white/10 pt-6 text-center text-xs text-white/40 sm:flex-row sm:text-left">
-          <p>{ft.rights}</p>
-          <p>{ft.disclaimer}</p>
+          <p>{ft.copyright}</p>
+          <p className="flex items-center gap-1">
+            <span>{ft.madeA}</span>
+            <Heart className="h-3 w-3 text-red-500 fill-red-500" />
+            <span>{ft.madeB} • {ft.uptime}</span>
+          </p>
         </div>
       </div>
     </footer>

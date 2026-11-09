@@ -41,8 +41,8 @@ export default function FinalCta({
           </div>
 
           <h2 className="font-display mt-5 text-3xl leading-[1.1] font-black tracking-tight text-white sm:text-5xl lg:text-6xl">
-            {c.title} <br />
-            <span className="text-gradient-gold">{c.titleAccent}</span>
+            {c.h2a} <br />
+            <span className="text-gradient-gold">{c.h2b}</span>
           </h2>
 
           <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-white/70 sm:text-lg">
@@ -55,7 +55,7 @@ export default function FinalCta({
               className="btn-shine flex w-full cursor-pointer items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-r from-[#d4af37] via-[#ffb52e] to-[#ff8a3c] px-8 py-4 text-base font-black text-[#090d16] shadow-[0_15px_40px_-8px_rgba(212,175,55,0.6)] transition hover:brightness-110 active:scale-[0.98] sm:w-auto"
             >
               <UserPlus className="h-5 w-5" />
-              <span>{c.primaryBtn}</span>
+              <span>{c.createFirst}</span>
             </button>
 
             <a
@@ -63,7 +63,7 @@ export default function FinalCta({
               className="flex w-full items-center justify-center gap-2.5 rounded-2xl border border-white/15 bg-white/5 px-8 py-4 text-base font-bold text-white transition hover:border-amber-400/40 hover:bg-amber-400/10 hover:text-amber-300 active:scale-[0.98] sm:w-auto"
             >
               <Download className="h-5 w-5" />
-              <span>{c.secondaryBtn}</span>
+              <span>{c.download}</span>
             </a>
 
             <button
@@ -79,15 +79,17 @@ export default function FinalCta({
           <div className="mt-10 flex flex-wrap items-center justify-center gap-5 border-t border-white/8 pt-8 text-xs text-white/50">
             <span className="flex items-center gap-1.5 font-medium text-emerald-400">
               <CheckCircle2 className="h-4 w-4" />
-              {t.onlineExchange.step1Title}
+              {c.check1}
             </span>
             <span>•</span>
             <span className="flex items-center gap-1.5">
               <ShieldCheck className="h-4 w-4 text-amber-400" />
-              {t.hero.trust2}
+              {c.check2}
             </span>
             <span>•</span>
-            <span>{t.hero.trust1}</span>
+            <span>{c.check3}</span>
+            <span>•</span>
+            <span>{c.check4}</span>
           </div>
         </div>
       </div>
