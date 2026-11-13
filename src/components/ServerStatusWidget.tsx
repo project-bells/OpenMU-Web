@@ -8,7 +8,7 @@ export default function ServerStatusWidget() {
   const s = t.statusWidget;
   const [nowUtc7, setNowUtc7] = useState<string>("");
   const [siegeCountdown, setSiegeCountdown] = useState<string>("");
-  const [onlineCount, setOnlineCount] = useState<number>(4892);
+  const [onlineCount, setOnlineCount] = useState<number>(0);
   const [serverData, setServerData] = useState<ServerStatusData | null>(null);
 
   // Fetch live server database status
@@ -18,7 +18,7 @@ export default function ServerStatusWidget() {
       const data = await fetchServerStatus();
       if (mounted) {
         setServerData(data);
-        if (typeof data.onlineCount === "number") setOnlineCount(data.onlineCount);
+        setOnlineCount(Number(data.onlineCount ?? data.totalOnline ?? 0));
       }
     };
     loadStatus();
@@ -72,7 +72,7 @@ export default function ServerStatusWidget() {
     return () => clearInterval(interval);
   }, []);
 
-  const isOnline = serverData?.status !== "OFFLINE";
+  const isOnline = Boolean(serverData && !serverData.status.toLowerCase().includes("off"));
 
   return (
     <section className="relative z-10 mx-auto max-w-7xl px-4 pt-2 pb-6 sm:px-6">
@@ -95,7 +95,7 @@ export default function ServerStatusWidget() {
             <div className="min-w-0">
               <div className="flex items-center gap-2">
                 <span className="font-display text-sm font-bold tracking-wide text-white">
-                  {serverData?.serverName || "eGiS-MU S6E3"}
+                  {serverData?.serverName || "OpenMU Origins"}
                 </span>
                 <span className="flex items-center gap-1 text-[11px] font-semibold text-emerald-400">
                   <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
@@ -106,7 +106,7 @@ export default function ServerStatusWidget() {
               <div className="mt-1 flex items-center gap-2 text-[11px] text-white/40">
                 <span>{s.uptimePrefix}:</span>
                 <span className="font-mono font-medium text-emerald-400">
-                  {serverData?.uptime || "99.98%"}
+                  {serverData?.uptime || "-"}
                 </span>
               </div>
             </div>

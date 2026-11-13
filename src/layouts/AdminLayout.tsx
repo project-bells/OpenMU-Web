@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
   Users,
@@ -12,15 +12,35 @@ import {
   Sparkles,
 } from "lucide-react";
 import { useAdminAuth } from "../context/AdminAuthContext";
+import { fetchServerStatus } from "../services/dbApi";
 
 export default function AdminLayout() {
   const { user, logout } = useAdminAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [onlineCount, setOnlineCount] = useState<number>(0);
+  const [serverOnline, setServerOnline] = useState<boolean>(false);
 
-  const handleLogout = () => {
-    logout();
+  useEffect(() => {
+    let active = true;
+    const load = () => {
+      fetchServerStatus().then((status) => {
+        if (!active) return;
+        setOnlineCount(status.totalOnline ?? 0);
+        setServerOnline(status.status === "online");
+      });
+    };
+    load();
+    const timer = setInterval(load, 30000);
+    return () => {
+      active = false;
+      clearInterval(timer);
+    };
+  }, []);
+
+  const handleLogout = async () => {
+    await logout();
     navigate("/admin/login");
   };
 
@@ -89,9 +109,11 @@ export default function AdminLayout() {
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
               </span>
-              <span className="font-bold text-emerald-300">Origins-1 • ONLINE</span>
+              <span className={`font-bold ${serverOnline ? "text-emerald-300" : "text-slate-300"}`}>
+                OpenMU Server • {serverOnline ? "ONLINE" : "OFFLINE"}
+              </span>
             </div>
-            <span className="font-mono text-[11px] text-emerald-200">4,892 คน</span>
+            <span className="font-mono text-[11px] text-emerald-200">{onlineCount.toLocaleString()} คน</span>
           </div>
         </div>
 
@@ -163,7 +185,7 @@ export default function AdminLayout() {
                 GM
               </div>
               <div className="truncate">
-                <div className="truncate text-xs font-bold text-white">{user?.name || "Admin GM"}</div>
+                <div className="truncate text-xs font-bold text-white">{user?.username || "Admin GM"}</div>
                 <div className="flex items-center gap-1 text-[10px] text-amber-300">
                   <Sparkles className="h-2.5 w-2.5" />
                   <span>{user?.role || "Administrator"}</span>

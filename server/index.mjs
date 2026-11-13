@@ -1,22 +1,43 @@
-import { createServer } from "node:http";
-import { existsSync } from "node:fs";
-import { createHandler, loadConfig } from "./app.mjs";
-
-if (typeof process.loadEnvFile === "function" && existsSync(".env")) {
-  try {
-    process.loadEnvFile(".env");
-  } catch {
-    // ignore if unreadable
-  }
-}
+import http from "node:http";
+import { loadConfig } from "./config.mjs";
+import { PostgresStore } from "./db/postgresStore.mjs";
+import { InMemoryWebStore } from "./db/inMemoryStore.mjs";
+import { createHandler } from "./app.mjs";
 
 try {
-  const config = loadConfig();
-  const server = createServer(createHandler(config));
-  server.requestTimeout = 15_000;
-  server.headersTimeout = 20_000;
-  server.listen(config.port, "0.0.0.0", () => console.log(`OpenMU Web listening on port ${config.port}`));
-} catch (error) {
-  console.error(error instanceof Error ? error.message : error);
-  process.exitCode = 1;
+  process.loadEnvFile?.();
+} catch {
+  // Optional .env file may not exist when environment variables are injected externally.
+}
+
+const config = loadConfig();
+const store = config.databaseUrl ? new PostgresStore(config.databaseUrl) : new InMemoryWebStore();
+
+await store.init();
+
+const { handler, walletService } = createHandler(config, { store });
+const server = http.createServer(handler);
+
+const reconcileInterval = setInterval(() => {
+  walletService.reconcilePendingExchanges().catch((error) => {
+    console.error("[reconcilePendingExchanges]", error?.message || error);
+  });
+}, 30_000);
+reconcileInterval.unref();
+
+server.listen(config.port, () => {
+  console.log(
+    `[OpenMU-Web BFF] Listening on http://0.0.0.0:${config.port} (env=${config.nodeEnv}, store=${
+      config.databaseUrl ? "postgres" : "in-memory-dev"
+    })`
+  );
+});
+
+for (const signal of ["SIGINT", "SIGTERM"]) {
+  process.on(signal, async () => {
+    clearInterval(reconcileInterval);
+    server.close();
+    await store.close();
+    process.exit(0);
+  });
 }

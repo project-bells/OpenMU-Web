@@ -88,26 +88,25 @@ export default function Hero({
 }) {
   const { t, lang } = useI18n();
   const h = t.hero;
-  const online = useLiveOnline(4874);
+  const online = useLiveOnline();
 
-  const [realms, setRealms] = useState<RealmData[]>([
-    { name: "eGiS-1", loadPct: 86, online: 2420, max: 2500, status: "Normal", pvp: true },
-    { name: "eGiS-2", loadPct: 62, online: 1680, max: 2500, status: "Normal", pvp: false },
-    { name: "eGiS-3", loadPct: 41, online: 792, max: 2000, status: "Normal", pvp: true },
-  ]);
-  const [serverState, setServerState] = useState<"online" | "offline">("online");
+  const [realms, setRealms] = useState<RealmData[]>([]);
+  const [serverState, setServerState] = useState<"online" | "offline">("offline");
 
   useEffect(() => {
     let mounted = true;
     const loadRealms = async () => {
       try {
         const data = await fetchServerStatus();
-        if (mounted && data.realms && data.realms.length > 0) {
-          setRealms(data.realms);
+        if (mounted) {
+          setRealms(data.realms ?? data.servers ?? []);
           setServerState(data.status.toLowerCase().includes("off") ? "offline" : "online");
         }
       } catch {
-        // Keep fallback
+        if (mounted) {
+          setRealms([]);
+          setServerState("offline");
+        }
       }
     };
     loadRealms();

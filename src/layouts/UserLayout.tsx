@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
   Coins,
@@ -19,10 +19,27 @@ import {
 import { useUserDashboard } from "../context/UserDashboardContext";
 
 export default function UserLayout() {
-  const { username, availableHours, credits, wcoin, mainCharacter, logoutPlayer } = useUserDashboard();
+  const {
+    isAuthenticated,
+    isLoading,
+    username,
+    availableHours,
+    credits,
+    wcoin,
+    pendingWcoin,
+    mainCharacter,
+    mainCharacterObj,
+    logoutPlayer,
+  } = useUserDashboard();
   const location = useLocation();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      navigate("/login", { replace: true });
+    }
+  }, [isLoading, isAuthenticated, navigate]);
 
   const navItems = [
     {
@@ -50,10 +67,22 @@ export default function UserLayout() {
     },
   ];
 
-  const handleLogout = () => {
-    logoutPlayer();
+  const handleLogout = async () => {
+    await logoutPlayer();
     navigate("/");
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#070a13] text-sm text-slate-300">
+        กำลังโหลดข้อมูลบัญชีผู้เล่น...
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return null;
+  }
 
   return (
     <div className="flex min-h-screen bg-[#070a13] text-slate-100 antialiased font-sans">
@@ -113,7 +142,9 @@ export default function UserLayout() {
               </div>
               <div className="flex items-center gap-1 text-[11px] text-slate-400 truncate mt-0.5">
                 <Swords className="h-3 w-3 text-amber-400 shrink-0" />
-                <span className="truncate">{mainCharacter} (Lv.400)</span>
+                <span className="truncate">
+                  {mainCharacter !== "-" ? `${mainCharacter} (Lv.${mainCharacterObj?.lvl ?? 1})` : "ยังไม่มีตัวละคร"}
+                </span>
               </div>
             </div>
           </div>
@@ -235,10 +266,13 @@ export default function UserLayout() {
               </div>
             </div>
 
-            {/* 3. WCoin Badge (Optional Bonus) */}
+            {/* 3. WCoin Badge */}
             <div className="hidden lg:flex items-center gap-1.5 rounded-xl border border-purple-400/30 bg-purple-500/10 px-2.5 py-1.5 text-xs font-bold text-purple-300">
               <Sparkles className="h-3.5 w-3.5 text-purple-400" />
-              <span className="font-mono text-xs">{wcoin.toLocaleString()} WC</span>
+              <span className="font-mono text-xs">
+                {wcoin.toLocaleString()} WC
+                {pendingWcoin > 0 ? ` (+${pendingWcoin.toLocaleString()} Pending)` : ""}
+              </span>
             </div>
 
             {/* 4. ชื่อ Username */}

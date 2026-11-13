@@ -1,12 +1,28 @@
+import { useEffect, useState } from "react";
 import { Zap, Gem, ShieldCheck, Swords, Flame, Radar, ArrowRight, Activity } from "lucide-react";
-import { SERVERS } from "../data";
 import { useLiveOnline } from "../hooks/hooks";
 import { useI18n } from "../i18n";
+import { fetchServerStatus, type RealmData } from "../services/dbApi";
 
 export default function Features() {
   const { t } = useI18n();
   const f = t.features;
   const online = useLiveOnline();
+  const [realms, setRealms] = useState<RealmData[]>([]);
+
+  useEffect(() => {
+    let active = true;
+    const update = async () => {
+      const status = await fetchServerStatus();
+      if (active) setRealms(status.realms ?? status.servers ?? []);
+    };
+    void update();
+    const timer = window.setInterval(update, 15_000);
+    return () => {
+      active = false;
+      window.clearInterval(timer);
+    };
+  }, []);
 
   const icons = [Zap, Gem, ShieldCheck, Swords, Flame, Radar];
   const values = ["50x", "30%", "0 P2W", "S6E3", "SUN", "100%"];
@@ -49,15 +65,18 @@ export default function Features() {
               </span>
             </div>
             <div className="flex items-center gap-2 font-mono text-[11px] text-white/50">
-              {SERVERS.map((s) => (
+              {realms.map((realm, index) => (
                 <span
-                  key={s}
+                  key={String(realm.id ?? realm.name ?? index)}
                   className="hidden items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-2.5 py-1 sm:inline-flex"
                 >
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" /> {s}
+                  <span className={`h-1.5 w-1.5 rounded-full ${realm.status?.toLowerCase().includes("normal") || realm.isOnline ? "bg-emerald-400" : "bg-rose-400"}`} />
+                  {realm.name || realm.serverName || `Server ${index + 1}`}
                 </span>
               ))}
-              <span className="text-emerald-300/80">● {f.uptime}</span>
+              <span className={realms.length > 0 ? "text-emerald-300/80" : "text-rose-300/80"}>
+                ● {realms.length > 0 ? f.uptime : "Offline"}
+              </span>
             </div>
           </div>
         </div>

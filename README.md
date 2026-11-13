@@ -5,10 +5,15 @@ Player-facing website and secure registration gateway for OpenMU. The browser ne
 ## Production setup
 
 1. In the OpenMU admin panel, create an API key with the **Operator** role. Keep it secret.
-2. Copy `.env.example` to `.env` and set `OPENMU_API_URL`, `OPENMU_API_KEY`, `VITE_CLIENT_DOWNLOAD_URL`, and `VITE_CLIENT_SIZE`.
+2. Copy `.env.example` to `.env` and set `OPENMU_API_URL`, `OPENMU_API_KEY`,
+   `POSTGRES_PASSWORD`, `SESSION_SECRET`, `VITE_CLIENT_DOWNLOAD_URL`, and
+   `VITE_CLIENT_SIZE`. Generate `SESSION_SECRET` as at least 32 random
+   characters. When OpenMU runs on the Docker host, use
+   `http://host.docker.internal:<admin-port>` instead of `127.0.0.1` for
+   `OPENMU_API_URL`.
 3. Start the site with `docker compose up -d --build`.
 4. Put a TLS reverse proxy or load balancer in front of port 8080. Protect the OpenMU admin panel separately.
-5. Verify `/health/live`, `/health/ready`, live player count, duplicate-account handling, and an actual game login with a newly created account.
+5. Verify `/health/live`, `/health/ready`, live player count, duplicate-account handling, and an actual game login with a newly created account. The Compose stack creates the website's isolated PostgreSQL schema automatically.
 
 `TRUST_PROXY=true` trusts the first `X-Forwarded-For` address for registration rate limiting. Enable it only behind a proxy which overwrites this header.
 

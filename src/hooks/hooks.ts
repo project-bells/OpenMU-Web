@@ -103,7 +103,8 @@ export function useLiveOnline(_fallback = 0) {
       try {
         const response = await fetch("/api/server/status", { signal: controller.signal, headers: { Accept: "application/json" } });
         const status = response.ok ? await response.json() : null;
-        setOnline(Number.isInteger(status?.players) ? status.players : 0);
+        const count = status?.totalOnline ?? status?.onlineCount ?? status?.players;
+        setOnline(Number.isFinite(Number(count)) ? Number(count) : 0);
       } catch (error) {
         if (!(error instanceof DOMException && error.name === "AbortError")) setOnline(0);
       }

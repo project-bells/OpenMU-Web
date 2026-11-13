@@ -1,94 +1,103 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from "react";
+import { fetchAdminSession, loginAdmin, logoutAdmin } from "../services/dbApi";
 
-export interface AdminUser {
+export interface AdminUserSession {
   username: string;
-  name: string;
-  role: "Admin GM" | "Super Admin" | "GameMaster";
-  email: string;
-  avatar?: string;
-  lastLogin?: string;
+  loginName: string;
+  role: string;
+  roles: string[];
 }
 
 interface AdminAuthContextType {
-  user: AdminUser | null;
+  user: AdminUserSession | null;
   isAuthenticated: boolean;
-  login: (username: string, pass: string) => Promise<{ success: boolean; error?: string }>;
-  logout: () => void;
-  quickAdminLogin: () => void;
+  isLoading: boolean;
+  login: (
+    username: string,
+    password: string,
+    twoFactorCode?: string,
+    isRecoveryCode?: boolean
+  ) => Promise<{ ok: boolean; error?: string; code?: string }>;
+  refreshSession: () => Promise<void>;
+  logout: () => Promise<void>;
 }
-
-const STORAGE_KEY = "egis_admin_session";
 
 const AdminAuthContext = createContext<AdminAuthContextType | undefined>(undefined);
 
+function mapAdminSession(admin: { loginName: string; roles: string[] }): AdminUserSession {
+  const roles = Array.isArray(admin.roles) ? admin.roles : [];
+  return {
+    username: admin.loginName,
+    loginName: admin.loginName,
+    role: roles[0] || "GameMaster",
+    roles,
+  };
+}
+
 export function AdminAuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<AdminUser | null>(() => {
+  const [user, setUser] = useState<AdminUserSession | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const refreshSession = useCallback(async () => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) return JSON.parse(saved);
+      const session = await fetchAdminSession();
+      setUser(session?.authenticated && session.admin ? mapAdminSession(session.admin) : null);
     } catch {
-      // ignore
+      setUser(null);
+    } finally {
+      setIsLoading(false);
     }
-    return null;
-  });
+  }, []);
 
   useEffect(() => {
-    try {
-      if (user) {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
-      } else {
-        localStorage.removeItem(STORAGE_KEY);
+    refreshSession();
+  }, [refreshSession]);
+
+  const login = useCallback(
+    async (
+      username: string,
+      password: string,
+      twoFactorCode?: string,
+      isRecoveryCode = false
+    ): Promise<{ ok: boolean; error?: string; code?: string }> => {
+      const trimmed = username.trim();
+      if (!trimmed || !password) {
+        return { ok: false, error: "กรุณากรอก Username และ Password ให้ครบถ้วน" };
       }
-    } catch {
-      // ignore
-    }
-  }, [user]);
 
-  const login = async (username: string, pass: string) => {
-    const trimmed = username.trim().toLowerCase();
-    // Allow 'admin' with 'admin1234' or any valid GM credential
-    if ((trimmed === "admin" && pass === "admin1234") || (trimmed === "admin" && pass.length >= 4)) {
-      const adminUser: AdminUser = {
-        username: "admin",
-        name: "Ares (Senior GameMaster)",
-        role: "Admin GM",
-        email: "gm.ares@egis-mu.com",
-        avatar: "/images/class-dk.jpg",
-        lastLogin: new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }),
+      const res = await loginAdmin(trimmed, password, twoFactorCode, isRecoveryCode);
+      if (res.success && res.admin) {
+        setUser(mapAdminSession(res.admin));
+        return { ok: true };
+      }
+      return {
+        ok: false,
+        error: res.error || "ชื่อผู้ใช้หรือรหัสผ่าน Admin ไม่ถูกต้อง หรือบัญชีไม่มีสิทธิ์ GM",
+        code: res.code,
       };
-      setUser(adminUser);
-      return { success: true };
+    },
+    []
+  );
+
+  const logout = useCallback(async () => {
+    try {
+      await logoutAdmin();
+    } catch {
+      // Clear local session state even if network logout fails
+    } finally {
+      setUser(null);
     }
-    return {
-      success: false,
-      error: "ชื่อผู้ใช้งานหรือรหัสผ่าน Admin ไม่ถูกต้อง (ใช้ admin / admin1234)",
-    };
-  };
-
-  const quickAdminLogin = () => {
-    const adminUser: AdminUser = {
-      username: "admin",
-      name: "Ares (Senior GameMaster)",
-      role: "Admin GM",
-      email: "gm.ares@egis-mu.com",
-      avatar: "/images/class-dk.jpg",
-      lastLogin: new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }),
-    };
-    setUser(adminUser);
-  };
-
-  const logout = () => {
-    setUser(null);
-  };
+  }, []);
 
   return (
     <AdminAuthContext.Provider
       value={{
         user,
-        isAuthenticated: !!user,
+        isAuthenticated: Boolean(user),
+        isLoading,
         login,
+        refreshSession,
         logout,
-        quickAdminLogin,
       }}
     >
       {children}

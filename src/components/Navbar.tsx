@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Menu, X, Download, LogIn, UserPlus, Trophy, Swords, HelpCircle, ArrowRightLeft } from "lucide-react";
+import { Menu, X, Download, LogIn, UserPlus, Trophy, Swords, HelpCircle } from "lucide-react";
 import { useLiveOnline } from "../hooks/hooks";
 import { LangDropdown, LangGrid } from "./LangSwitcher";
 import { useI18n } from "../i18n";
@@ -83,7 +83,7 @@ export default function Navbar({
               </span>
             </a>
 
-            {/* Nav Menu: Home, Rates, Register, Ranking, Download, Classes, and Login */}
+            {/* Primary navigation */}
             <div className="hidden items-center gap-1 lg:flex">
               <a
                 href="#top"
@@ -121,32 +121,21 @@ export default function Navbar({
               >
                 {n.classes}
               </a>
-
-              {/* Login Button (links to /login) */}
-              <Link
-                to="/login"
-                className="btn-shine relative ml-1 flex items-center gap-1.5 rounded-xl border border-amber-400/40 bg-gradient-to-r from-amber-500/20 via-amber-400/15 to-purple-600/20 px-3.5 py-2 text-sm font-bold whitespace-nowrap text-amber-300 shadow-[0_0_15px_-3px_rgba(212,175,55,0.3)] transition hover:border-amber-400 hover:text-white hover:brightness-110"
-              >
-                <LogIn className="h-4 w-4 text-amber-400" />
-                <span>{n.login}</span>
-              </Link>
-
-              {/* Player / User Dashboard Portal Link */}
-              <Link
-                to="/user/dashboard"
-                className="flex items-center gap-1.5 rounded-xl border border-cyan-500/40 bg-cyan-500/15 px-3 py-2 text-xs font-bold whitespace-nowrap text-cyan-300 transition hover:border-cyan-400 hover:bg-cyan-500/25 hover:text-white"
-                title="ผู้เล่น: แลกเครดิตออนไลน์ 1 ชม. = 5 เครดิต"
-              >
-                <ArrowRightLeft className="h-3.5 w-3.5 text-cyan-400" />
-                <span>Dashboard ผู้เล่น</span>
-              </Link>
             </div>
 
-            {/* Right Zone: Lang, Register CTA, Mobile Menu Toggle */}
+            {/* Account actions: language, login, registration */}
             <div className="flex items-center gap-2">
               <div className="hidden sm:block">
                 <LangDropdown />
               </div>
+
+              <Link
+                to="/login"
+                className="btn-shine relative hidden items-center gap-1.5 rounded-xl border border-amber-400/40 bg-gradient-to-r from-amber-500/20 via-amber-400/15 to-purple-600/20 px-3.5 py-2.5 text-sm font-bold whitespace-nowrap text-amber-300 shadow-[0_0_15px_-3px_rgba(212,175,55,0.3)] transition hover:border-amber-400 hover:text-white hover:brightness-110 sm:flex"
+              >
+                <LogIn className="h-4 w-4 text-amber-400" />
+                <span>{n.login}</span>
+              </Link>
 
               <button
                 onClick={onRegister}
@@ -243,21 +232,6 @@ export default function Navbar({
                     <span>{n.accountLogin}</span>
                   </span>
                   <span className="font-mono text-xs text-amber-200/80">เข้าสู่ระบบ</span>
-                </Link>
-
-                {/* Mobile User Dashboard Link */}
-                <Link
-                  to="/user/dashboard"
-                  onClick={() => setOpen(false)}
-                  className="mt-2 flex w-full items-center justify-between rounded-xl border border-cyan-500/40 bg-cyan-500/15 px-3.5 py-2.5 text-xs font-bold text-cyan-300 transition hover:bg-cyan-500/25 hover:text-white"
-                >
-                  <span className="flex items-center gap-2">
-                    <ArrowRightLeft className="h-4 w-4 text-cyan-400" />
-                    <span>Dashboard ผู้เล่น (แลกเครดิต)</span>
-                  </span>
-                  <span className="rounded bg-cyan-500/30 px-1.5 py-0.5 text-[9px] text-cyan-200 font-mono">
-                    1 Hr = 5 Cr
-                  </span>
                 </Link>
               </div>
 

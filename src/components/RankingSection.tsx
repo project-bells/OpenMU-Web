@@ -9,9 +9,13 @@ import {
   Filter,
   RefreshCw,
 } from "lucide-react";
-import { CharacterRankItem, GuildRankItem } from "../data";
 import { useI18n } from "../i18n";
-import { fetchCharacterRankings, fetchGuildRankings } from "../services/dbApi";
+import {
+  fetchCharacterRankings,
+  fetchGuildRankings,
+  type CharacterRankItem,
+  type GuildRankItem,
+} from "../services/dbApi";
 
 const CLASS_BADGES: Record<string, { bg: string; text: string; border: string; name: string }> = {
   // Dark Knight Lineage
@@ -511,7 +515,7 @@ export default function RankingSection() {
                         </td>
 
                         <td className="px-4 py-3.5 text-center font-mono font-bold whitespace-nowrap text-amber-300">
-                          {guild.totalResets.toLocaleString()}
+                          {(guild.totalResets ?? 0).toLocaleString()}
                         </td>
 
                         <td className="px-4 py-3.5 text-center font-mono text-xs whitespace-nowrap text-white/70">

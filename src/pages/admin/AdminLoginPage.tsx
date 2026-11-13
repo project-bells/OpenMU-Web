@@ -1,43 +1,48 @@
-import { useState, FormEvent } from "react";
+import { useState, useEffect, FormEvent } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
-import { ShieldCheck, Lock, User, ArrowLeft, Sparkles, AlertCircle, KeyRound, Server } from "lucide-react";
+import { ShieldCheck, Lock, User, ArrowLeft, AlertCircle, KeyRound, Server } from "lucide-react";
 import { useAdminAuth } from "../../context/AdminAuthContext";
 
 export default function AdminLoginPage() {
-  const { login, quickAdminLogin } = useAdminAuth();
+  const { isAuthenticated, login } = useAdminAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [username, setUsername] = useState("admin");
-  const [password, setPassword] = useState("admin1234");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [twoFactorCode, setTwoFactorCode] = useState("");
+  const [requireTwoFactor, setRequireTwoFactor] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const from = (location.state as any)?.from?.pathname || "/admin/dashboard";
+  const from = (location.state as { from?: { pathname?: string } } | null)?.from?.pathname || "/admin/dashboard";
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate(from, { replace: true });
+    }
+  }, [isAuthenticated, navigate, from]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError("");
     setLoading(true);
 
-    const res = await login(username, password);
+    const res = await login(username, password, requireTwoFactor ? twoFactorCode.trim() : undefined);
     setLoading(false);
 
-    if (res.success) {
+    if (res.ok) {
       navigate(from, { replace: true });
     } else {
+      if (res.code === "TWO_FACTOR_REQUIRED") {
+        setRequireTwoFactor(true);
+      }
       setError(res.error || "Invalid administrator credentials");
     }
   };
 
-  const handleQuickLogin = () => {
-    quickAdminLogin();
-    navigate(from, { replace: true });
-  };
-
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#070a12] p-4 text-white">
-      {/* Background Ambience Glow */}
       <div
         aria-hidden="true"
         className="pointer-events-none absolute -top-40 left-1/2 h-96 w-96 -translate-x-1/2 rounded-full bg-amber-500/15 blur-[120px]"
@@ -47,7 +52,6 @@ export default function AdminLoginPage() {
         className="pointer-events-none absolute -bottom-40 right-1/4 h-96 w-96 rounded-full bg-rose-600/10 blur-[140px]"
       />
 
-      {/* Back to Public Web Link */}
       <Link
         to="/"
         className="glass absolute top-5 left-5 flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold text-slate-300 transition hover:border-amber-400/50 hover:text-white"
@@ -57,7 +61,6 @@ export default function AdminLoginPage() {
       </Link>
 
       <div className="relative z-10 w-full max-w-md">
-        {/* Emblem & Header */}
         <div className="mb-6 text-center">
           <div className="mx-auto mb-3 grid h-16 w-16 place-items-center rounded-2xl border border-amber-400/40 bg-gradient-to-br from-amber-500/20 to-rose-600/20 shadow-[0_0_35px_-5px_rgba(212,175,55,0.4)]">
             <ShieldCheck className="h-8 w-8 text-amber-300" />
@@ -66,28 +69,28 @@ export default function AdminLoginPage() {
             <Server className="h-3 w-3" /> GM Administrator Access
           </div>
           <h1 className="font-display mt-2 text-2xl font-black tracking-wide text-white">
-            eGiS-MU <span className="text-gradient-gold">GameMaster Console</span>
+            OpenMU <span className="text-gradient-gold">GameMaster Console</span>
           </h1>
           <p className="mt-1 text-xs text-slate-400">
-            ระบบบริหารจัดการเซิร์ฟเวอร์ Season 6 Episode 3 (Protected Route)
+            ตรวจสอบสิทธิ์จริงผ่าน AdminPanel Identity (รองรับ TOTP 2FA)
           </p>
         </div>
 
-        {/* Card Box */}
         <div className="glass-strong gold-border-glow rounded-3xl p-6 sm:p-8">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="mb-1.5 block text-xs font-semibold text-slate-300">
-                ชื่อบัญชีผู้ดูแลระบบ (Admin Username)
+                ชื่อบัญชีผู้ดูแลระบบ (Admin Login Name)
               </label>
               <div className="relative">
                 <User className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-slate-500" />
                 <input
                   required
                   type="text"
+                  autoComplete="username"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  placeholder="admin"
+                  placeholder="กรอกชื่อบัญชี GM / Admin"
                   className="w-full rounded-xl border border-white/10 bg-white/5 py-3 pr-4 pl-10 text-sm text-white placeholder-slate-500 focus:border-amber-400/60 focus:outline-none"
                 />
               </div>
@@ -102,6 +105,7 @@ export default function AdminLoginPage() {
                 <input
                   required
                   type="password"
+                  autoComplete="current-password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
@@ -109,6 +113,25 @@ export default function AdminLoginPage() {
                 />
               </div>
             </div>
+
+            {requireTwoFactor && (
+              <div>
+                <label className="mb-1.5 block text-xs font-semibold text-amber-300">
+                  รหัสยืนยันตัวตน 2FA / Authenticator Code
+                </label>
+                <div className="relative">
+                  <KeyRound className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-amber-400" />
+                  <input
+                    required
+                    type="text"
+                    value={twoFactorCode}
+                    onChange={(e) => setTwoFactorCode(e.target.value)}
+                    placeholder="123456"
+                    className="w-full rounded-xl border border-amber-400/40 bg-white/5 py-3 pr-4 pl-10 font-mono text-sm text-white placeholder-slate-500 focus:border-amber-400 focus:outline-none"
+                  />
+                </div>
+              </div>
+            )}
 
             {error && (
               <div className="flex items-center gap-2 rounded-xl border border-rose-500/40 bg-rose-500/10 p-3 text-xs font-medium text-rose-300">
@@ -123,25 +146,12 @@ export default function AdminLoginPage() {
               className="btn-shine flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#d4af37] via-[#ffb52e] to-[#ff8a3c] px-6 py-3.5 text-sm font-extrabold text-[#090d16] shadow-lg shadow-amber-500/30 transition hover:brightness-110 disabled:opacity-50"
             >
               <KeyRound className="h-4 w-4" />
-              {loading ? "กำลังตรวจสอบสิทธิ์…" : "เข้าสู่ระบบผู้ดูแล (LOGIN AS GM)"}
+              {loading ? "กำลังตรวจสอบสิทธิ์..." : "เข้าสู่ระบบผู้ดูแล (LOGIN AS GM)"}
             </button>
-
-            {/* Quick 1-Click Login for immediate testing */}
-            <div className="pt-2">
-              <button
-                type="button"
-                onClick={handleQuickLogin}
-                className="flex w-full items-center justify-center gap-2 rounded-xl border border-amber-400/30 bg-amber-500/10 py-2.5 text-xs font-bold text-amber-300 transition hover:bg-amber-400/20"
-              >
-                <Sparkles className="h-4 w-4 text-amber-400" />
-                <span>ทดสอบด่วน: 1-Click เข้าใช้งานสิทธิ์ Admin (admin / admin1234)</span>
-              </button>
-            </div>
           </form>
 
-          {/* Security Notice */}
           <div className="mt-6 border-t border-white/10 pt-4 text-center text-[10px] text-slate-500">
-            ระบบป้องกันด้วยสิทธิ์ Auth Guard • รองรับการเชื่อมต่อกับ Cloudflare Access & Postgres
+            Session Cookie Protected (HttpOnly / HMAC Signed) • BFF Admin Auth Guard
           </div>
         </div>
       </div>
