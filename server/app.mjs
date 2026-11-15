@@ -648,10 +648,10 @@ export function createHandler(config, deps = {}) {
         }
         const idempotencyKey = resolveIdempotencyKey(request, raw);
 
-        // Verify target account exists on OpenMU
-        await openmuClient.getAccountProfile(targetLogin);
-
         if (currency === "wcoin" || currency === "wcoinc") {
+          // WCoinC is authoritative in OpenMU, so this operation must fail if
+          // the game API is unavailable instead of pretending it succeeded.
+          await openmuClient.getAccountProfile(targetLogin);
           const grantRes = await openmuClient.grantCashShopCoins(targetLogin, {
             coinType: "WCoinC",
             amount,
@@ -669,6 +669,9 @@ export function createHandler(config, deps = {}) {
             details: { amount, reason, grantId: grantRes.data?.id ?? null },
           });
         } else {
+          // Credits belong to the website wallet. Keep this operation available
+          // during a temporary OpenMU outage; the account was already discovered
+          // through the server-backed Admin user list.
           await store.adminAdjustWalletTransaction({
             loginName: targetLogin,
             amount,
@@ -679,7 +682,19 @@ export function createHandler(config, deps = {}) {
           });
         }
 
-        const summary = await walletService.getPlayerSummary(targetLogin);
+        let summary;
+        try {
+          summary = await walletService.getPlayerSummary(targetLogin);
+        } catch (error) {
+          if (currency === "wcoin" || currency === "wcoinc" || !(error instanceof UpstreamError)) {
+            throw error;
+          }
+          const walletSummary = await store.getWalletSummary(targetLogin, 50);
+          summary = {
+            account: { loginName: targetLogin, creditsBalance: walletSummary.wallet.creditsBalance },
+            ...walletSummary,
+          };
+        }
         return json(response, 200, { success: true, ...summary });
       }
 

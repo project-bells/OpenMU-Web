@@ -185,6 +185,24 @@ export function createWalletService({ config, store, openmuClient, paypalClient 
     return results;
   }
 
+  async function reconcilePendingTopups() {
+    const pending = await store.listTopupOrders({ status: "PAID", limit: 20 });
+    const results = [];
+    for (const order of pending) {
+      try {
+        results.push(await fulfillPaidOrder({
+          orderId: order.id,
+          providerTransactionId: order.providerTransactionId ?? null,
+          actorType: "system",
+          actorName: "topup-reconciler",
+        }));
+      } catch (error) {
+        results.push({ status: "PAID", orderId: order.id, error });
+      }
+    }
+    return results;
+  }
+
   function getCatalog() {
     return {
       packages: TOPUP_PACKAGES,
@@ -444,6 +462,7 @@ export function createWalletService({ config, store, openmuClient, paypalClient 
     redeemOnlineTime,
     exchangeCreditsToWCoin,
     reconcilePendingExchanges,
+    reconcilePendingTopups,
     getCatalog,
     createTopupOrder,
     fulfillPaidOrder,

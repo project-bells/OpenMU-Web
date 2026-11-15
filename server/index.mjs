@@ -22,6 +22,9 @@ const reconcileInterval = setInterval(() => {
   walletService.reconcilePendingExchanges().catch((error) => {
     console.error("[reconcilePendingExchanges]", error?.message || error);
   });
+  walletService.reconcilePendingTopups().catch((error) => {
+    console.error("[reconcilePendingTopups]", error?.message || error);
+  });
 }, 30_000);
 reconcileInterval.unref();
 
