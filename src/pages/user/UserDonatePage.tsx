@@ -19,6 +19,7 @@ import {
   capturePaypalTopupOrder,
   confirmSandboxTopupOrder,
   createTopupOrder,
+  fetchTopupOrder,
   fetchTopupCatalog,
 } from "../../services/dbApi";
 import { useUserDashboard } from "../../context/UserDashboardContext";
@@ -26,7 +27,7 @@ import { useUserDashboard } from "../../context/UserDashboardContext";
 type ProviderId = "promptpay_manual" | "paypal" | "dev_sandbox";
 
 export default function UserDonatePage() {
-  const { username, orders, refreshSummary } = useUserDashboard();
+  const { username, orders, pendingWcoin, refreshSummary } = useUserDashboard();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [packages, setPackages] = useState<TopupPackage[]>([]);
@@ -101,6 +102,42 @@ export default function UserDonatePage() {
     };
   }, [searchParams, setSearchParams, refreshSummary]);
 
+  // A PromptPay confirmation can arrive while this page is open. Poll only the
+  // active unpaid order, then refresh the authoritative account balances once.
+  useEffect(() => {
+    if (!activeOrder || activeOrder.status !== "PENDING_PAYMENT") return;
+
+    let active = true;
+    const checkStatus = async () => {
+      try {
+        const latest = await fetchTopupOrder(activeOrder.id);
+        if (!active || latest.status === "PENDING_PAYMENT") return;
+        setActiveOrder(latest);
+        await refreshSummary();
+        if (!active) return;
+        if (latest.status === "FULFILLED") {
+          setFeedback({
+            ok: true,
+            text: `ยืนยันยอดแล้ว: +${latest.creditsToGrant.toLocaleString()} Credits และ +${latest.wcoinToGrant.toLocaleString()} WCoinC`,
+          });
+        } else if (latest.status === "PAID" || latest.status === "FULFILLING") {
+          setFeedback({ ok: true, text: "รับชำระเงินแล้ว กำลังส่ง WCoinC เข้า OpenMU" });
+        } else {
+          setFeedback({ ok: false, text: `ออเดอร์เปลี่ยนเป็นสถานะ ${latest.status}` });
+        }
+      } catch {
+        // Keep the current order visible; the next poll can recover.
+      }
+    };
+
+    void checkStatus();
+    const timer = window.setInterval(checkStatus, 5000);
+    return () => {
+      active = false;
+      window.clearInterval(timer);
+    };
+  }, [activeOrder?.id, activeOrder?.status, refreshSummary]);
+
   const currentPkg = packages.find((p) => p.id === selectedPkgId) || packages[0];
 
   const handleCopy = async (key: string, text: string) => {
@@ -131,7 +168,7 @@ export default function UserDonatePage() {
       } else {
         setFeedback({
           ok: true,
-          text: `สร้างคำสั่งซื้อ ${res.order.id} สำเร็จ สถานะ: ${res.order.status}`,
+          text: `สร้างออเดอร์ ${res.order.id} แล้ว — ต้องชำระเงินจริงและรอ GM/Webhook ยืนยันก่อน Credits และ WCoinC จึงจะเข้า`,
         });
       }
     } else {
@@ -344,8 +381,14 @@ export default function UserDonatePage() {
                   {activeOrder.qrPayload}
                 </div>
                 <p className="text-[11px] text-slate-400">
-                  เมื่อโอนเงินเสร็จ ระบบจะอัปเดตผ่าน Webhook อัตโนมัติ หรือให้ GM กดยืนยันออเดอร์ใน Admin Console
+                  สถานะนี้ยังไม่เพิ่ม Credits/WCoinC หลังโอนแล้วต้องรอ Webhook หรือ GM กดยืนยันใน Admin Console หน้านี้จะตรวจสถานะให้อัตโนมัติทุก 5 วินาที
                 </p>
+              </div>
+            )}
+
+            {activeOrder.status === "FULFILLED" && pendingWcoin > 0 && (
+              <div className="rounded-xl border border-purple-400/30 bg-purple-500/10 p-3 text-[11px] text-purple-200">
+                มี WCoinC รอเข้าเกม {pendingWcoin.toLocaleString()} เหรียญ — เข้าเกมใหม่หรือเปิด Cash Shop เพื่อให้ Game Server นำยอดเข้าบัญชี
               </div>
             )}
 

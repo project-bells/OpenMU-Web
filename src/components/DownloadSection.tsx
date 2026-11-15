@@ -1,9 +1,29 @@
+import { useEffect, useState } from "react";
 import { Download, HardDrive, ShieldCheck, Monitor, AlertTriangle } from "lucide-react";
 import { useI18n } from "../i18n";
+import { fetchDownloadClientConfig, type DownloadClientConfig } from "../services/dbApi";
+
+const fallbackDownloadConfig: DownloadClientConfig = {
+  version: "1.04D • S6E3",
+  fileSize: "2.1 GB",
+  updatedAt: "November 2026",
+  megaUrl: "https://mega.nz",
+  mediafireUrl: "https://www.mediafire.com",
+  virusTotalLabel: "VirusTotal Clean (0/72)",
+};
 
 export default function DownloadSection() {
   const { t } = useI18n();
   const d = t.download;
+  const [clientConfig, setClientConfig] = useState(fallbackDownloadConfig);
+
+  useEffect(() => {
+    let active = true;
+    fetchDownloadClientConfig()
+      .then((value) => active && setClientConfig(value))
+      .catch(() => undefined);
+    return () => { active = false; };
+  }, []);
 
   return (
     <section id="download" className="relative scroll-mt-28 py-16 sm:py-24">
@@ -32,7 +52,7 @@ export default function DownloadSection() {
             <div className="max-w-xl">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="rounded-md border border-amber-400/40 bg-amber-400/20 px-2.5 py-0.5 font-mono text-xs font-bold text-amber-300">
-                  {d.versionBadge}
+                  {clientConfig.version}
                 </span>
                 <span className="rounded-md border border-emerald-500/30 bg-emerald-500/20 px-2 py-0.5 text-xs font-semibold text-emerald-300">
                   {d.fullClientBadge}
@@ -46,14 +66,14 @@ export default function DownloadSection() {
               <div className="mt-4 flex flex-wrap items-center gap-4 font-mono text-xs text-white/60">
                 <span className="flex items-center gap-1.5">
                   <HardDrive className="h-4 w-4 text-amber-400" />
-                  {d.fileSize} <strong className="text-white">2.1 GB</strong>
+                  {d.fileSize} <strong className="text-white">{clientConfig.fileSize}</strong>
                 </span>
                 <span>•</span>
-                <span>{d.updatedDate}</span>
+                <span>{clientConfig.updatedAt}</span>
                 <span>•</span>
                 <span className="flex items-center gap-1 text-emerald-400">
                   <ShieldCheck className="h-4 w-4" />
-                  {d.virusClean}
+                  {clientConfig.virusTotalLabel}
                 </span>
               </div>
             </div>
@@ -61,7 +81,7 @@ export default function DownloadSection() {
             {/* Download Mirrors */}
             <div className="flex min-w-[280px] shrink-0 flex-col gap-3 sm:flex-row lg:flex-col">
               <a
-                href="https://mega.nz"
+                href={clientConfig.megaUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="btn-shine flex items-center justify-between gap-3 rounded-2xl bg-gradient-to-r from-[#d4af37] via-[#ffb52e] to-[#ff8a3c] px-6 py-4 text-sm font-black text-[#090d16] shadow-[0_12px_35px_-8px_rgba(212,175,55,0.45)] transition hover:brightness-110 active:scale-[0.98]"
@@ -74,12 +94,12 @@ export default function DownloadSection() {
                   </span>
                 </div>
                 <span className="rounded bg-black/20 px-2 py-1 font-mono text-xs font-bold text-white">
-                  2.1 GB
+                  {clientConfig.fileSize}
                 </span>
               </a>
 
               <a
-                href="https://www.mediafire.com"
+                href={clientConfig.mediafireUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="glass flex items-center justify-between gap-3 rounded-2xl border-white/20 bg-white/5 px-6 py-4 text-sm font-bold text-white transition hover:border-amber-400/50 hover:bg-amber-400/10 hover:text-amber-200 active:scale-[0.98]"
@@ -92,7 +112,7 @@ export default function DownloadSection() {
                   </span>
                 </div>
                 <span className="rounded bg-white/10 px-2 py-1 font-mono text-xs text-white/70">
-                  2.1 GB
+                  {clientConfig.fileSize}
                 </span>
               </a>
 

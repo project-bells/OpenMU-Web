@@ -10,6 +10,7 @@ import {
   ExternalLink,
   ChevronRight,
   Sparkles,
+  Download,
 } from "lucide-react";
 import { useAdminAuth } from "../context/AdminAuthContext";
 import { fetchServerStatus } from "../services/dbApi";
@@ -57,6 +58,12 @@ export default function AdminLayout() {
       icon: Users,
       badge: "Data Grid",
       highlight: true,
+    },
+    {
+      label: "Download Client",
+      path: "/admin/downloads",
+      icon: Download,
+      badge: "Links",
     },
   ];
 

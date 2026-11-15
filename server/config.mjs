@@ -146,6 +146,7 @@ export function loadConfig(env = process.env) {
     paypalEnv: String(env.PAYPAL_ENV ?? "sandbox").trim().toLowerCase() === "live" ? "live" : "sandbox",
     paypalWebhookId: String(env.PAYPAL_WEBHOOK_ID ?? "").trim(),
     publicWebUrl: String(env.PUBLIC_WEB_URL ?? "http://localhost:8080").replace(/\/+$/, ""),
+    downloadConfigPath: String(env.DOWNLOAD_CONFIG_PATH ?? "data/download-client.json").trim(),
   };
 }
 

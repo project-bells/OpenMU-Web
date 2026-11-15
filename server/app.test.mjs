@@ -367,6 +367,12 @@ test("validation, character normalization, PromptPay EMVCo payload, and HMAC hel
   const rankItem = normalizeCharacterRankingItem({ name: "Wizard1", className: "Soul Master", lvl: 350 }, 0);
   assert.equal(rankItem.rank, 1);
   assert.equal(rankItem.classId, "dw");
+  assert.equal(rankItem.level, 350);
+
+  const legacyKnight = normalizeCharacterRankingItem({ Name: "Knight1", CharacterClass: 4, Level: 275, MasterLevel: 12 }, 1);
+  assert.equal(legacyKnight.classShort, "DK");
+  assert.equal(legacyKnight.level, 275);
+  assert.equal(legacyKnight.masterLevel, 12);
 
   const qr = buildPromptPayPayload("0812345678", 300);
   assert.ok(qr && qr.startsWith("00020101021229370016A00000067701011101130066812345678"));

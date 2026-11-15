@@ -13,6 +13,7 @@ import {
 import { createPayPalClient } from "./services/paymentProviders.mjs";
 import { createWalletService } from "./services/walletService.mjs";
 import { normalizeCharacterRankingItem } from "./services/characterHelpers.mjs";
+import { createDownloadConfigService } from "./services/downloadConfigService.mjs";
 
 export { loadConfig } from "./config.mjs";
 export { normalizeCharacterClass, normalizeCharacterRankingItem } from "./services/characterHelpers.mjs";
@@ -162,6 +163,7 @@ export function createHandler(config, deps = {}) {
   const walletService =
     deps.walletService ?? createWalletService({ config, store, openmuClient, paypalClient });
   const checkRateLimit = createRateLimiter();
+  const downloadConfigService = deps.downloadConfigService ?? createDownloadConfigService(config);
 
   async function requirePlayer(request, response) {
     const session = await sessions.resolveSession(request, "player");
@@ -227,6 +229,10 @@ export function createHandler(config, deps = {}) {
       if (pathname === "/api/server/status" && method === "GET") {
         const { data } = await openmuClient.getServerStatus();
         return json(response, 200, data);
+      }
+
+      if (pathname === "/api/downloads/client" && method === "GET") {
+        return json(response, 200, { config: await downloadConfigService.get() });
       }
 
       if (pathname === "/api/rankings/characters" && method === "GET") {
@@ -754,6 +760,24 @@ export function createHandler(config, deps = {}) {
         const limit = Math.min(200, Math.max(1, Number.parseInt(url.searchParams.get("limit") ?? "100", 10) || 100));
         const logs = await store.listAuditLogs({ limit });
         return json(response, 200, { logs });
+      }
+
+      if (pathname === "/api/admin/downloads/client" && method === "PUT") {
+        const admin = await requireAdmin(request, response);
+        if (!admin) return;
+        const raw = await readJsonBody(request);
+        const saved = await downloadConfigService.update(raw);
+        await store.recordAuditLog({
+          actorType: "admin",
+          actorName: admin.loginName,
+          action: "ADMIN_DOWNLOAD_CONFIG_UPDATE",
+          targetType: "download_config",
+          targetId: "client",
+          outcome: "SUCCESS",
+          ipAddress,
+          details: saved,
+        });
+        return json(response, 200, { success: true, config: saved });
       }
 
       if (pathname.startsWith("/api/")) {

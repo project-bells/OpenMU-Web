@@ -65,7 +65,14 @@ export function normalizeCharacterClass(raw) {
     return { classId: "dk", className: "Dark Knight", classShort: "DK" };
   }
 
-  const numCandidates = [raw.classNumber, raw.ClassNumber, raw.characterClassNumber, raw.CharacterClassNumber];
+  const numCandidates = [
+    raw.classNumber,
+    raw.ClassNumber,
+    raw.characterClassNumber,
+    raw.CharacterClassNumber,
+    raw.characterClass,
+    raw.CharacterClass,
+  ];
   for (const numVal of numCandidates) {
     if (numVal !== null && numVal !== undefined && numVal !== "") {
       const n = Number(numVal);
@@ -89,10 +96,10 @@ export function normalizeCharacterClass(raw) {
 
 export function normalizeCharacterRankingItem(raw, index = 0) {
   const cls = normalizeCharacterClass(raw);
-  const level = Math.max(1, Math.floor(Number(raw.level ?? raw.Level ?? 1) || 1));
-  const masterLevel = Math.max(0, Math.floor(Number(raw.masterLevel ?? raw.MasterLevel ?? 0) || 0));
-  const resets = Math.max(0, Math.floor(Number(raw.resets ?? raw.Resets ?? 0) || 0));
-  const grandResets = Math.max(0, Math.floor(Number(raw.grandResets ?? raw.GrandResets ?? 0) || 0));
+  const level = Math.max(1, Math.floor(Number(raw.level ?? raw.Level ?? raw.lvl ?? raw.Lvl ?? 1) || 1));
+  const masterLevel = Math.max(0, Math.floor(Number(raw.masterLevel ?? raw.MasterLevel ?? raw.masterlvl ?? raw.MasterLvl ?? 0) || 0));
+  const resets = Math.max(0, Math.floor(Number(raw.resets ?? raw.Resets ?? raw.resetCount ?? raw.ResetCount ?? 0) || 0));
+  const grandResets = Math.max(0, Math.floor(Number(raw.grandResets ?? raw.GrandResets ?? raw.grandResetCount ?? raw.GrandResetCount ?? 0) || 0));
   const guildRaw = raw.guild ?? raw.Guild ?? raw.guildName ?? raw.GuildName ?? null;
   const guild = typeof guildRaw === "string" && guildRaw.trim() ? guildRaw.trim() : null;
 

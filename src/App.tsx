@@ -4,6 +4,7 @@ import HomePage from "./pages/public/HomePage";
 import AdminLayout from "./layouts/AdminLayout";
 import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
 import AdminUsersPage from "./pages/admin/AdminUsersPage";
+import AdminDownloadsPage from "./pages/admin/AdminDownloadsPage";
 import AdminLoginPage from "./pages/admin/AdminLoginPage";
 import UserLoginPage from "./pages/public/UserLoginPage";
 import AdminGuard from "./components/admin/AdminGuard";
@@ -48,6 +49,7 @@ export default function App() {
                   <Route index element={<Navigate to="/admin/dashboard" replace />} />
                   <Route path="dashboard" element={<AdminDashboardPage />} />
                   <Route path="users" element={<AdminUsersPage />} />
+                  <Route path="downloads" element={<AdminDownloadsPage />} />
                 </Route>
 
                 {/* 1. Player User Dashboard (URL: /user/dashboard) */}

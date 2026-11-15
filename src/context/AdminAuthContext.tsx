@@ -25,10 +25,11 @@ interface AdminAuthContextType {
 const AdminAuthContext = createContext<AdminAuthContextType | undefined>(undefined);
 
 function mapAdminSession(admin: { loginName: string; roles: string[] }): AdminUserSession {
-  const roles = Array.isArray(admin.roles) ? admin.roles : [];
+  const roles = Array.isArray(admin.roles) ? admin.roles.map((role) => String(role)) : [];
+  const loginName = String(admin.loginName ?? "");
   return {
-    username: admin.loginName,
-    loginName: admin.loginName,
+    username: loginName,
+    loginName,
     role: roles[0] || "GameMaster",
     roles,
   };

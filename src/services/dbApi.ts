@@ -99,6 +99,39 @@ export interface OpenMuCharacter {
   isOnline: boolean;
 }
 
+function normalizeAccountCharacter(raw: any): OpenMuCharacter {
+  const cls = resolveCharacterClass(
+    raw.classNumber ?? raw.ClassNumber ?? raw.classShort ?? raw.ClassShort ??
+      raw.className ?? raw.ClassName ?? raw.classId ?? raw.ClassId ??
+      raw.characterClass ?? raw.CharacterClass
+  );
+  return {
+    ...raw,
+    id: raw.id ?? raw.Id,
+    name: String(raw.name ?? raw.Name ?? "-"),
+    characterClassId: String(raw.characterClassId ?? raw.CharacterClassId ?? raw.classId ?? raw.ClassId ?? cls.id),
+    classId: String(raw.classId ?? raw.ClassId ?? cls.id),
+    className: String(raw.className ?? raw.ClassName ?? cls.name),
+    classShort: String(raw.classShort ?? raw.ClassShort ?? cls.short),
+    lvl: Number(raw.level ?? raw.Level ?? raw.lvl ?? raw.Lvl ?? 1),
+    masterlvl: Number(raw.masterLevel ?? raw.MasterLevel ?? raw.masterlvl ?? raw.MasterLvl ?? 0),
+    resets: Number(raw.resets ?? raw.Resets ?? raw.resetCount ?? raw.ResetCount ?? 0),
+    levelUpPoints: Number(raw.levelUpPoints ?? raw.LevelUpPoints ?? 0),
+    strength: Number(raw.strength ?? raw.Strength ?? raw.stats?.strength ?? raw.Stats?.Strength ?? 0),
+    agility: Number(raw.agility ?? raw.Agility ?? raw.stats?.agility ?? raw.Stats?.Agility ?? 0),
+    vitality: Number(raw.vitality ?? raw.Vitality ?? raw.stats?.vitality ?? raw.Stats?.Vitality ?? 0),
+    energy: Number(raw.energy ?? raw.Energy ?? raw.stats?.energy ?? raw.Stats?.Energy ?? 0),
+    leadership: Number(raw.leadership ?? raw.Leadership ?? raw.stats?.leadership ?? raw.Stats?.Leadership ?? 0),
+    currentMapId: String(raw.currentMapId ?? raw.CurrentMapId ?? raw.mapNumber ?? raw.MapNumber ?? ""),
+    mapName: String(raw.mapName ?? raw.MapName ?? getMapName(raw.mapNumber ?? raw.MapNumber ?? raw.currentMapId ?? raw.CurrentMapId)),
+    pkState: Number(raw.pkState ?? raw.PkState ?? raw.heroStateCode ?? raw.HeroStateCode ?? 0),
+    pkLevel: String(raw.pkLevel ?? raw.PkLevel ?? raw.heroState ?? raw.HeroState ?? "Normal"),
+    playerKillCount: Number(raw.playerKillCount ?? raw.PlayerKillCount ?? 0),
+    zen: Number(raw.zen ?? raw.Zen ?? raw.money ?? raw.Money ?? 0),
+    isOnline: Boolean(raw.isOnline ?? raw.IsOnline ?? false),
+  };
+}
+
 export interface AccountProfile {
   loginName: string;
   email: string;
@@ -310,6 +343,15 @@ export interface AdminAuditLogEntry {
   action: string;
   details: string;
   createdAt: string;
+}
+
+export interface DownloadClientConfig {
+  version: string;
+  fileSize: string;
+  updatedAt: string;
+  megaUrl: string;
+  mediafireUrl: string;
+  virusTotalLabel: string;
 }
 
 export class ApiError extends Error {
@@ -913,6 +955,11 @@ export async function fetchTopupOrders(): Promise<TopupOrderRecord[]> {
   return Array.isArray(data.orders) ? data.orders.map(normalizeTopupOrder) : [];
 }
 
+export async function fetchTopupOrder(orderId: string): Promise<TopupOrderRecord> {
+  const data = await apiJson<{ order: any }>(`/api/topup/orders/${encodeURIComponent(orderId)}`);
+  return normalizeTopupOrder(data.order);
+}
+
 export async function capturePaypalTopupOrder(
   orderId: string
 ): Promise<{ success: boolean; status?: string; order?: TopupOrderRecord; summary?: PlayerSessionSummary; error?: string }> {
@@ -948,8 +995,8 @@ export async function confirmSandboxTopupOrder(
 }
 
 export async function fetchAccountCharacters(): Promise<OpenMuCharacter[]> {
-  const data = await apiJson<{ characters?: OpenMuCharacter[] }>("/api/characters/list");
-  return Array.isArray(data.characters) ? data.characters : [];
+  const data = await apiJson<{ characters?: unknown[] }>("/api/characters/list");
+  return Array.isArray(data.characters) ? data.characters.map(normalizeAccountCharacter) : [];
 }
 
 export async function resetCharacterAction(
@@ -1186,10 +1233,28 @@ export async function fetchAdminAuditLogs(limit = 100): Promise<AdminAuditLogEnt
   return (Array.isArray(data.logs) ? data.logs : []).map((row) => ({
     id: String(row.id ?? ""),
     actorLogin: String(row.actorLogin ?? row.actorName ?? ""),
-    targetLogin: row.targetLogin ?? row.targetId ?? null,
+    targetLogin: row.targetLogin ?? row.targetId ? String(row.targetLogin ?? row.targetId) : null,
     action: String(row.action ?? ""),
-    details: row.details,
+    details: typeof row.details === "string" ? row.details : JSON.stringify(row.details ?? {}),
     ipAddress: row.ipAddress ?? null,
     createdAt: String(row.createdAt ?? ""),
   }));
+}
+
+export async function fetchDownloadClientConfig(): Promise<DownloadClientConfig> {
+  const data = await apiJson<{ config: DownloadClientConfig }>("/api/downloads/client");
+  return data.config;
+}
+
+export async function updateDownloadClientConfig(
+  config: DownloadClientConfig
+): Promise<{ success: boolean; config?: DownloadClientConfig; error?: string }> {
+  try {
+    return await apiJson("/api/admin/downloads/client", {
+      method: "PUT",
+      body: JSON.stringify(config),
+    });
+  } catch (err: any) {
+    return { success: false, error: err?.message || "บันทึกข้อมูลดาวน์โหลดไม่สำเร็จ" };
+  }
 }
