@@ -929,6 +929,26 @@ export async function exchangeCreditsToWcoin(
   }
 }
 
+export async function purchaseVipMembership(
+  idempotencyKey = createIdempotencyKey()
+): Promise<{ success: boolean; vipUntil?: string | null; remainingCredits?: number; error?: string }> {
+  try {
+    const res = await apiJson<any>("/api/vip/purchase", {
+      method: "POST",
+      headers: { "Idempotency-Key": idempotencyKey },
+      body: JSON.stringify({}),
+    });
+    const summary = normalizePlayerSummary(res);
+    return {
+      success: true,
+      vipUntil: summary.account.vipUntil ?? res.purchase?.vipUntil ?? null,
+      remainingCredits: summary.wallet.credits,
+    };
+  } catch (err: any) {
+    return { success: false, error: err?.message || "VIP purchase failed" };
+  }
+}
+
 export async function createTopupOrder(
   packageId: string,
   provider: "promptpay_manual" | "paypal" | "webhook_hmac" | "dev_sandbox",

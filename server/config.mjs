@@ -5,6 +5,8 @@ export const ONLINE_REWARD_CREDITS_PER_HOUR = 5;
 
 export const EXCHANGE_CREDITS_PER_BLOCK = 100;
 export const EXCHANGE_WCOINC_PER_BLOCK = 50;
+export const VIP_CREDITS_COST = 300;
+export const VIP_DURATION_DAYS = 30;
 
 export const TOPUP_PACKAGES = Object.freeze([
   {

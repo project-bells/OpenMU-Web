@@ -62,7 +62,7 @@ export class PostgresStore {
 
   async getWalletSummary(loginName, limit = 50) {
     const wallet = await this.ensureWalletAccount(loginName);
-    const [ledgerRes, redemptionsRes, exchangesRes, ordersRes] = await Promise.all([
+    const [ledgerRes, redemptionsRes, exchangesRes, vipPurchasesRes, ordersRes] = await Promise.all([
       this.pool.query(
         `SELECT * FROM web.wallet_ledger WHERE login_name = $1 ORDER BY created_at DESC LIMIT $2;`,
         [wallet.loginName, limit]
@@ -76,6 +76,10 @@ export class PostgresStore {
         [wallet.loginName, limit]
       ),
       this.pool.query(
+        `SELECT * FROM web.vip_purchases WHERE login_name = $1 ORDER BY created_at DESC LIMIT $2;`,
+        [wallet.loginName, limit]
+      ),
+      this.pool.query(
         `SELECT * FROM web.topup_orders WHERE login_name = $1 ORDER BY created_at DESC LIMIT $2;`,
         [wallet.loginName, limit]
       ),
@@ -86,8 +90,87 @@ export class PostgresStore {
       ledger: ledgerRes.rows.map(mapLedgerRow),
       redemptions: redemptionsRes.rows.map(mapRedemptionRow),
       exchanges: exchangesRes.rows.map(mapExchangeRow),
+      vipPurchases: vipPurchasesRes.rows.map(mapVipPurchaseRow),
       orders: ordersRes.rows.map(mapOrderRow),
     };
+  }
+
+  async reserveVipPurchaseTransaction({ loginName, idempotencyKey, creditsCost, durationDays, createdBy, ipAddress = null }) {
+    return this.withTransaction(async (client) => {
+      const existing = await client.query(`SELECT * FROM web.vip_purchases WHERE idempotency_key = $1;`, [idempotencyKey]);
+      if (existing.rows.length > 0) {
+        const walletRes = await client.query(`SELECT * FROM web.wallet_accounts WHERE login_name = $1;`, [existing.rows[0].login_name]);
+        return { idempotent: true, purchase: mapVipPurchaseRow(existing.rows[0]), wallet: mapWalletRow(walletRes.rows[0]) };
+      }
+
+      const wallet = await this.ensureWalletAccount(loginName, client);
+      if (wallet.creditsBalance < creditsCost) {
+        throw new StoreError(400, "INSUFFICIENT_CREDITS", `Insufficient Credits (available ${wallet.creditsBalance}, required ${creditsCost}).`);
+      }
+
+      const purchaseId = crypto.randomUUID();
+      const ledgerId = crypto.randomUUID();
+      const openmuReference = `webvip:${purchaseId}`;
+      const newBalance = wallet.creditsBalance - creditsCost;
+      await client.query(
+        `UPDATE web.wallet_accounts SET credits_balance = $2, lifetime_credits_spent = lifetime_credits_spent + $3, updated_at = NOW() WHERE login_name = $1;`,
+        [wallet.loginName, newBalance, creditsCost]
+      );
+      await client.query(
+        `INSERT INTO web.wallet_ledger
+          (id, login_name, entry_type, delta_credits, balance_after, currency_unit, idempotency_key, reference_type, reference_id, description, metadata_json, created_by)
+         VALUES ($1, $2, 'VIP_PURCHASE_DEBIT', $3, $4, 'CREDITS', $5, 'VIP_PURCHASE', $6, $7, $8, $9);`,
+        [ledgerId, wallet.loginName, -creditsCost, newBalance, `vipdebit:${idempotencyKey}`, purchaseId,
+          `Purchase ${durationDays} VIP days for ${creditsCost} Credits`, JSON.stringify({ durationDays, openmuReference }), createdBy]
+      );
+      const result = await client.query(
+        `INSERT INTO web.vip_purchases
+          (id, login_name, idempotency_key, openmu_reference, credits_spent, duration_days, status, debit_ledger_id)
+         VALUES ($1, $2, $3, $4, $5, $6, 'PENDING_GRANT', $7) RETURNING *;`,
+        [purchaseId, wallet.loginName, idempotencyKey, openmuReference, creditsCost, durationDays, ledgerId]
+      );
+      await insertAudit(client, { actorType: "player", actorName: wallet.loginName, action: "VIP_PURCHASE_INITIATED", targetType: "vip_purchases", targetId: purchaseId, outcome: "SUCCESS", ipAddress, details: { creditsCost, durationDays } });
+      const updatedWallet = await client.query(`SELECT * FROM web.wallet_accounts WHERE login_name = $1;`, [wallet.loginName]);
+      return { idempotent: false, purchase: mapVipPurchaseRow(result.rows[0]), wallet: mapWalletRow(updatedWallet.rows[0]) };
+    });
+  }
+
+  async completeVipPurchaseTransaction({ purchaseId, openmuGrantId = null, vipUntil = null }) {
+    const result = await this.pool.query(
+      `UPDATE web.vip_purchases SET status = 'COMPLETED', openmu_grant_id = COALESCE($2, openmu_grant_id), vip_until = COALESCE($3, vip_until), last_error = NULL, updated_at = NOW()
+       WHERE id = $1 AND status IN ('PENDING_GRANT', 'COMPLETED') RETURNING *;`,
+      [purchaseId, openmuGrantId, vipUntil]
+    );
+    if (!result.rows[0]) throw new StoreError(404, "VIP_PURCHASE_NOT_FOUND", "VIP purchase not found.");
+    return mapVipPurchaseRow(result.rows[0]);
+  }
+
+  async reverseVipPurchaseTransaction({ purchaseId, reason }) {
+    return this.withTransaction(async (client) => {
+      const result = await client.query(`SELECT * FROM web.vip_purchases WHERE id = $1 FOR UPDATE;`, [purchaseId]);
+      if (!result.rows[0]) throw new StoreError(404, "VIP_PURCHASE_NOT_FOUND", "VIP purchase not found.");
+      const purchase = result.rows[0];
+      if (purchase.status === "REVERSED") return mapVipPurchaseRow(purchase);
+      if (purchase.status === "COMPLETED") throw new StoreError(409, "VIP_PURCHASE_COMPLETED", "Completed VIP purchase cannot be reversed.");
+      const wallet = await this.ensureWalletAccount(purchase.login_name, client);
+      const newBalance = wallet.creditsBalance + purchase.credits_spent;
+      const reversalId = crypto.randomUUID();
+      await client.query(`UPDATE web.wallet_accounts SET credits_balance = $2, lifetime_credits_spent = GREATEST(0, lifetime_credits_spent - $3), updated_at = NOW() WHERE login_name = $1;`, [wallet.loginName, newBalance, purchase.credits_spent]);
+      await client.query(
+        `INSERT INTO web.wallet_ledger
+          (id, login_name, entry_type, delta_credits, balance_after, currency_unit, idempotency_key, reference_type, reference_id, description, metadata_json, created_by)
+         VALUES ($1, $2, 'VIP_PURCHASE_REVERSAL', $3, $4, 'CREDITS', $5, 'VIP_PURCHASE', $6, $7, $8, 'system');`,
+        [reversalId, wallet.loginName, purchase.credits_spent, newBalance, `viprev:${purchase.id}`, purchase.id,
+          `Refunded ${purchase.credits_spent} Credits after rejected VIP grant`, JSON.stringify({ reason })]
+      );
+      const updated = await client.query(`UPDATE web.vip_purchases SET status = 'REVERSED', reversal_ledger_id = $2, last_error = $3, updated_at = NOW() WHERE id = $1 RETURNING *;`, [purchase.id, reversalId, reason]);
+      return mapVipPurchaseRow(updated.rows[0]);
+    });
+  }
+
+  async markVipPurchaseRetryError({ purchaseId, errorMessage }) {
+    const result = await this.pool.query(`UPDATE web.vip_purchases SET retry_count = retry_count + 1, last_error = $2, updated_at = NOW() WHERE id = $1 RETURNING *;`, [purchaseId, String(errorMessage || "Unknown upstream error")]);
+    return result.rows[0] ? mapVipPurchaseRow(result.rows[0]) : null;
   }
 
   async redeemOnlineTimeTransaction({
@@ -901,6 +984,17 @@ function mapOrderRow(row) {
     fulfilledAt: row.fulfilled_at,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
+  };
+}
+
+function mapVipPurchaseRow(row) {
+  return {
+    id: row.id, loginName: row.login_name, idempotencyKey: row.idempotency_key,
+    openmuReference: row.openmu_reference, creditsSpent: Number(row.credits_spent),
+    durationDays: Number(row.duration_days), status: row.status, debitLedgerId: row.debit_ledger_id,
+    reversalLedgerId: row.reversal_ledger_id, openmuGrantId: row.openmu_grant_id,
+    vipUntil: row.vip_until, retryCount: Number(row.retry_count), lastError: row.last_error,
+    createdAt: row.created_at, updatedAt: row.updated_at,
   };
 }
 

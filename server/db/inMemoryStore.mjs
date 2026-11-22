@@ -11,6 +11,7 @@ export class InMemoryWebStore {
     this.ledger = [];
     this.redemptions = [];
     this.exchanges = [];
+    this.vipPurchases = [];
     this.orders = [];
     this.webhookEvents = [];
     this.sessions = new Map();
@@ -51,8 +52,78 @@ export class InMemoryWebStore {
       ledger: this.ledger.filter((e) => e.loginName === wallet.loginName).slice(0, limit),
       redemptions: this.redemptions.filter((e) => e.loginName === wallet.loginName).slice(0, limit),
       exchanges: this.exchanges.filter((e) => e.loginName === wallet.loginName).slice(0, limit),
+      vipPurchases: this.vipPurchases.filter((e) => e.loginName === wallet.loginName).slice(0, limit),
       orders: this.orders.filter((e) => e.loginName === wallet.loginName).slice(0, limit),
     };
+  }
+
+  async reserveVipPurchaseTransaction({ loginName, idempotencyKey, creditsCost, durationDays, createdBy, ipAddress = null }) {
+    const existing = this.vipPurchases.find((p) => p.idempotencyKey === idempotencyKey);
+    if (existing) return { idempotent: true, purchase: { ...existing }, wallet: await this.ensureWalletAccount(existing.loginName) };
+    const wallet = await this.ensureWalletAccount(loginName);
+    const live = this.wallets.get(wallet.loginName);
+    if (live.creditsBalance < creditsCost) throw new StoreError(400, "INSUFFICIENT_CREDITS", `Insufficient Credits (available ${live.creditsBalance}, required ${creditsCost}).`);
+    const now = new Date().toISOString();
+    const purchaseId = crypto.randomUUID();
+    const ledgerId = crypto.randomUUID();
+    live.creditsBalance -= creditsCost;
+    live.lifetimeCreditsSpent += creditsCost;
+    live.updatedAt = now;
+    this.ledger.unshift({
+      id: ledgerId, loginName: live.loginName, entryType: "VIP_PURCHASE_DEBIT", deltaCredits: -creditsCost,
+      balanceAfter: live.creditsBalance, currencyUnit: "CREDITS", idempotencyKey: `vipdebit:${idempotencyKey}`,
+      referenceType: "VIP_PURCHASE", referenceId: purchaseId,
+      description: `Purchase ${durationDays} VIP days for ${creditsCost} Credits`,
+      metadata: { durationDays }, createdBy, createdAt: now,
+    });
+    const purchase = {
+      id: purchaseId, loginName: live.loginName, idempotencyKey, openmuReference: `webvip:${purchaseId}`,
+      creditsSpent: creditsCost, durationDays, status: "PENDING_GRANT", debitLedgerId: ledgerId,
+      reversalLedgerId: null, openmuGrantId: null, vipUntil: null, retryCount: 0, lastError: null,
+      createdAt: now, updatedAt: now,
+    };
+    this.vipPurchases.unshift(purchase);
+    await this.recordAuditLog({ actorType: "player", actorName: live.loginName, action: "VIP_PURCHASE_INITIATED", targetType: "vip_purchases", targetId: purchaseId, outcome: "SUCCESS", ipAddress, details: { creditsCost, durationDays } });
+    return { idempotent: false, purchase: { ...purchase }, wallet: { ...live } };
+  }
+
+  async completeVipPurchaseTransaction({ purchaseId, openmuGrantId = null, vipUntil = null }) {
+    const purchase = this.vipPurchases.find((p) => p.id === purchaseId);
+    if (!purchase) throw new StoreError(404, "VIP_PURCHASE_NOT_FOUND", "VIP purchase not found.");
+    purchase.status = "COMPLETED";
+    purchase.openmuGrantId = openmuGrantId || purchase.openmuGrantId;
+    purchase.vipUntil = vipUntil || purchase.vipUntil;
+    purchase.lastError = null;
+    purchase.updatedAt = new Date().toISOString();
+    return { ...purchase };
+  }
+
+  async reverseVipPurchaseTransaction({ purchaseId, reason }) {
+    const purchase = this.vipPurchases.find((p) => p.id === purchaseId);
+    if (!purchase) throw new StoreError(404, "VIP_PURCHASE_NOT_FOUND", "VIP purchase not found.");
+    if (purchase.status === "REVERSED") return { ...purchase };
+    if (purchase.status === "COMPLETED") throw new StoreError(409, "VIP_PURCHASE_COMPLETED", "Completed VIP purchase cannot be reversed.");
+    const live = this.wallets.get(purchase.loginName);
+    const now = new Date().toISOString();
+    const reversalId = crypto.randomUUID();
+    live.creditsBalance += purchase.creditsSpent;
+    live.lifetimeCreditsSpent = Math.max(0, live.lifetimeCreditsSpent - purchase.creditsSpent);
+    live.updatedAt = now;
+    this.ledger.unshift({ id: reversalId, loginName: live.loginName, entryType: "VIP_PURCHASE_REVERSAL", deltaCredits: purchase.creditsSpent, balanceAfter: live.creditsBalance, currencyUnit: "CREDITS", idempotencyKey: `viprev:${purchase.id}`, referenceType: "VIP_PURCHASE", referenceId: purchase.id, description: `Refunded ${purchase.creditsSpent} Credits after rejected VIP grant`, metadata: { reason }, createdBy: "system", createdAt: now });
+    purchase.status = "REVERSED";
+    purchase.reversalLedgerId = reversalId;
+    purchase.lastError = reason;
+    purchase.updatedAt = now;
+    return { ...purchase };
+  }
+
+  async markVipPurchaseRetryError({ purchaseId, errorMessage }) {
+    const purchase = this.vipPurchases.find((p) => p.id === purchaseId);
+    if (!purchase) return null;
+    purchase.retryCount += 1;
+    purchase.lastError = String(errorMessage || "Unknown upstream error");
+    purchase.updatedAt = new Date().toISOString();
+    return { ...purchase };
   }
 
   async redeemOnlineTimeTransaction({

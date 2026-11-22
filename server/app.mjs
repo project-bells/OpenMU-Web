@@ -387,6 +387,22 @@ export function createHandler(config, deps = {}) {
         return json(response, 200, { success: true, ...result, ...summary });
       }
 
+      if (pathname === "/api/vip/purchase" && method === "POST") {
+        const session = await requirePlayer(request, response);
+        if (!session) return;
+        if (checkRateLimit("vip-purchase", session.loginName, { limit: 5, windowMs: 60_000 }).limited) {
+          return json(response, 429, { success: false, code: "RATE_LIMITED", message: "Too many VIP purchase requests." });
+        }
+        const raw = await readJsonBody(request);
+        const result = await walletService.purchaseVip({
+          loginName: session.loginName,
+          idempotencyKey: resolveIdempotencyKey(request, raw),
+          ipAddress,
+        });
+        const summary = await walletService.getPlayerSummary(session.loginName);
+        return json(response, 200, { success: true, ...result, ...summary });
+      }
+
       // P0-C: Credit Top-Up & Payment Processing
       if (pathname === "/api/topup/orders" && method === "POST") {
         const session = await requirePlayer(request, response);

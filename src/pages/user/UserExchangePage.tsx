@@ -9,8 +9,10 @@ import {
   History,
   Info,
   Gem,
+  Crown,
 } from "lucide-react";
 import { useUserDashboard } from "../../context/UserDashboardContext";
+import { purchaseVipMembership } from "../../services/dbApi";
 
 function formatDuration(totalSeconds: number): string {
   const safe = Math.max(0, Math.floor(totalSeconds));
@@ -32,6 +34,8 @@ export default function UserExchangePage() {
     exchangeCredits,
     redemptions,
     exchanges,
+    account,
+    refreshSummary,
   } = useUserDashboard();
 
   const [hoursInput, setHoursInput] = useState<string>("");
@@ -41,6 +45,10 @@ export default function UserExchangePage() {
   const [creditsInput, setCreditsInput] = useState<string>("100");
   const [exchanging, setExchanging] = useState(false);
   const [exchangeFeedback, setExchangeFeedback] = useState<{ ok: boolean; message: string } | null>(null);
+  const [buyingVip, setBuyingVip] = useState(false);
+  const [vipFeedback, setVipFeedback] = useState<{ ok: boolean; message: string } | null>(null);
+  const vipUntil = account?.vipUntil ? new Date(account.vipUntil) : null;
+  const isVip = Boolean(vipUntil && vipUntil.getTime() > Date.now());
 
   const numericHours = parseInt(hoursInput, 10);
   const isValidHours = !Number.isNaN(numericHours) && numericHours > 0;
@@ -84,6 +92,21 @@ export default function UserExchangePage() {
     setExchanging(false);
 
     setExchangeFeedback({ ok: result.ok, message: result.message });
+  };
+
+  const handleVipPurchase = async () => {
+    if (buyingVip || credits < 300) return;
+    setBuyingVip(true);
+    setVipFeedback(null);
+    const result = await purchaseVipMembership();
+    setBuyingVip(false);
+    if (result.success) {
+      await refreshSummary();
+      const expiry = result.vipUntil ? new Date(result.vipUntil).toLocaleString("th-TH") : "อีก 30 วัน";
+      setVipFeedback({ ok: true, message: `ซื้อ VIP สำเร็จ! ใช้ 300 Credits — VIP ถึง ${expiry}` });
+    } else {
+      setVipFeedback({ ok: false, message: result.error || "ไม่สามารถซื้อ VIP ได้" });
+    }
   };
 
   return (
@@ -328,6 +351,37 @@ export default function UserExchangePage() {
             </button>
           </form>
         </div>
+      </div>
+
+      <div className="relative overflow-hidden rounded-3xl border border-amber-400/40 bg-gradient-to-br from-amber-500/20 via-[#0d111d] to-[#090d18] p-6 shadow-xl shadow-amber-500/10">
+        <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-start gap-4">
+            <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-amber-400/20 text-amber-300">
+              <Crown className="h-6 w-6" />
+            </div>
+            <div>
+              <h2 className="font-display text-lg font-black text-white">VIP 30 วัน</h2>
+              <p className="mt-1 text-xs text-slate-300">เข้า SV3‑VIP • EXP 130x • ต่ออายุสะสมจากวันหมดอายุเดิม</p>
+              <div className="mt-2 font-mono text-sm font-black text-amber-300">ราคา 300 Credits</div>
+              <div className="mt-1 text-[11px] text-slate-400">
+                {isVip ? `VIP ปัจจุบันถึง ${vipUntil!.toLocaleString("th-TH")}` : "สถานะปัจจุบัน: ผู้เล่นทั่วไป"}
+              </div>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={handleVipPurchase}
+            disabled={buyingVip || credits < 300}
+            className="btn-shine rounded-2xl bg-gradient-to-r from-amber-300 to-orange-500 px-6 py-3 text-sm font-black text-slate-950 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            {buyingVip ? "กำลังเปิดใช้งาน VIP..." : credits < 300 ? "Credits ไม่เพียงพอ" : "ซื้อ VIP 30 วัน"}
+          </button>
+        </div>
+        {vipFeedback && (
+          <div className={`mt-4 rounded-2xl border p-3 text-xs font-bold ${vipFeedback.ok ? "border-emerald-400/40 bg-emerald-500/15 text-emerald-300" : "border-rose-400/40 bg-rose-500/15 text-rose-300"}`}>
+            {vipFeedback.message}
+          </div>
+        )}
       </div>
 
       {/* History Tables */}

@@ -6,6 +6,8 @@ import {
   ONLINE_REWARD_SECONDS_PER_HOUR,
   TOPUP_PACKAGES,
   TOPUP_PACKAGES_BY_ID,
+  VIP_CREDITS_COST,
+  VIP_DURATION_DAYS,
 } from "../config.mjs";
 import { StoreError } from "../db/errors.mjs";
 import { UpstreamError } from "./openmuClient.mjs";
@@ -51,6 +53,7 @@ export function createWalletService({ config, store, openmuClient, paypalClient 
       ledger: walletSummary.ledger,
       redemptions: walletSummary.redemptions,
       exchanges: walletSummary.exchanges,
+      vipPurchases: walletSummary.vipPurchases,
       orders: walletSummary.orders,
     };
   }
@@ -174,6 +177,50 @@ export function createWalletService({ config, store, openmuClient, paypalClient 
       "Credits reserved; OpenMU coin delivery is temporarily unavailable and queued for automatic retry.",
       { exchange: reserved.exchange, wallet: reserved.wallet }
     );
+  }
+
+  async function purchaseVip({ loginName, idempotencyKey, ipAddress = null }) {
+    const cleanKey = String(idempotencyKey || "").trim();
+    if (!cleanKey || cleanKey.length > 128) {
+      throw new StoreError(400, "INVALID_IDEMPOTENCY_KEY", "A valid Idempotency-Key (<=128 chars) is required.");
+    }
+
+    const reserved = await store.reserveVipPurchaseTransaction({
+      loginName,
+      idempotencyKey: cleanKey,
+      creditsCost: VIP_CREDITS_COST,
+      durationDays: VIP_DURATION_DAYS,
+      createdBy: loginName,
+      ipAddress,
+    });
+    if (reserved.purchase.status === "COMPLETED") {
+      return { idempotent: true, status: "COMPLETED", purchase: reserved.purchase, wallet: reserved.wallet };
+    }
+    if (reserved.purchase.status === "REVERSED") {
+      throw new StoreError(409, "VIP_PURCHASE_PREVIOUSLY_REVERSED", reserved.purchase.lastError || "VIP purchase was previously rejected and refunded.");
+    }
+
+    try {
+      const response = await openmuClient.grantVipMembership(loginName, {
+        durationDays: VIP_DURATION_DAYS,
+        reason: `Website VIP purchase: ${VIP_CREDITS_COST} Credits for ${VIP_DURATION_DAYS} days`,
+        reference: reserved.purchase.openmuReference,
+      });
+      const purchase = await store.completeVipPurchaseTransaction({
+        purchaseId: reserved.purchase.id,
+        openmuGrantId: response.data?.id ?? null,
+        vipUntil: response.data?.vipUntil ?? null,
+      });
+      return { idempotent: reserved.idempotent, status: "COMPLETED", purchase, wallet: reserved.wallet };
+    } catch (error) {
+      if (error instanceof UpstreamError && error.status >= 400 && error.status < 500 && error.status !== 408 && error.status !== 429) {
+        const purchase = await store.reverseVipPurchaseTransaction({ purchaseId: reserved.purchase.id, reason: error.message });
+        const wallet = await store.ensureWalletAccount(loginName);
+        throw new StoreError(400, "VIP_PURCHASE_REJECTED_REFUNDED", "OpenMU rejected the VIP purchase. 300 Credits were refunded.", { purchase, wallet });
+      }
+      await store.markVipPurchaseRetryError({ purchaseId: reserved.purchase.id, errorMessage: error?.message || "OpenMU unavailable" });
+      throw new StoreError(503, "VIP_PURCHASE_PENDING_RETRY", "300 Credits are reserved; VIP delivery is pending retry.", { purchase: reserved.purchase, wallet: reserved.wallet });
+    }
   }
 
   async function reconcilePendingExchanges() {
@@ -470,6 +517,7 @@ export function createWalletService({ config, store, openmuClient, paypalClient 
     getPlayerSummary,
     redeemOnlineTime,
     exchangeCreditsToWCoin,
+    purchaseVip,
     reconcilePendingExchanges,
     reconcilePendingTopups,
     getCatalog,

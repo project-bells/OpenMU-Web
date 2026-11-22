@@ -380,6 +380,10 @@ test("PostgreSQL initial migration defines required web tables, UNIQUE keys, and
   assert.ok(sql.includes("CHECK (amount_thb > 0)"));
   assert.ok(sql.includes("idempotency_key TEXT NOT NULL UNIQUE"));
   assert.ok(sql.includes("openmu_reference TEXT NOT NULL UNIQUE"));
+  const vipSql = fs.readFileSync(path.join(__dirname, "db", "migrations", "002_vip_purchases.sql"), "utf8");
+  assert.ok(vipSql.includes("web.vip_purchases"));
+  assert.ok(vipSql.includes("VIP_PURCHASE_DEBIT"));
+  assert.ok(vipSql.includes("VIP_PURCHASE_REVERSAL"));
 });
 
 test("validation, character normalization, PromptPay EMVCo payload, and HMAC helpers work correctly", () => {
@@ -804,4 +808,26 @@ test("Full BFF integration: Auth isolation, P0-A Online Rewards, P0-B Credit Exc
   });
   assert.equal(vipReplay.status, 200);
   assert.equal(fakeOpenMu.grants.filter((grant) => grant.reference === `webtopup:${vipOrder.id}:vip`).length, 1);
+
+  // Dashboard purchase spends exactly 300 Credits and extends VIP by another 30 days once.
+  const previousVipUntil = new Date(fakeOpenMu.accounts.get("hero01").vipUntil).getTime();
+  const creditVip = await fetch(`${bff.url}/api/vip/purchase`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Cookie: playerCookieHeader, "Idempotency-Key": "credit-vip-1" },
+    body: JSON.stringify({}),
+  });
+  assert.equal(creditVip.status, 200);
+  const creditVipBody = await creditVip.json();
+  assert.equal(creditVipBody.wallet.creditsBalance, 13950);
+  assert.equal(creditVipBody.purchase.creditsSpent, 300);
+  assert.equal(creditVipBody.purchase.durationDays, 30);
+  assert.ok(new Date(fakeOpenMu.accounts.get("hero01").vipUntil).getTime() >= previousVipUntil + (30 * 86_400_000));
+
+  const creditVipReplay = await fetch(`${bff.url}/api/vip/purchase`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Cookie: playerCookieHeader, "Idempotency-Key": "credit-vip-1" },
+    body: JSON.stringify({}),
+  });
+  assert.equal(creditVipReplay.status, 200);
+  assert.equal((await creditVipReplay.json()).wallet.creditsBalance, 13950);
 });
