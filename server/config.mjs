@@ -156,6 +156,9 @@ export function loadConfig(env = process.env) {
     paypalThbPerUsd: Math.max(Number(env.PAYPAL_THB_PER_USD ?? "35"), 0.01),
     paypalWebhookId: String(env.PAYPAL_WEBHOOK_ID ?? "").trim(),
     publicWebUrl: String(env.PUBLIC_WEB_URL ?? "http://localhost:8080").replace(/\/+$/, ""),
+    paymentSlipDirectory: String(env.PAYMENT_SLIP_DIRECTORY ?? "data/payment-slips").trim(),
+    telegramBotToken: String(env.TELEGRAM_BOT_TOKEN ?? "").trim(),
+    telegramChatId: String(env.TELEGRAM_CHAT_ID ?? "").trim(),
     downloadConfigPath: String(env.DOWNLOAD_CONFIG_PATH ?? "data/download-client.json").trim(),
   };
 }

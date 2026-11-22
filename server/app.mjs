@@ -14,6 +14,7 @@ import { createPayPalClient } from "./services/paymentProviders.mjs";
 import { createWalletService } from "./services/walletService.mjs";
 import { normalizeCharacterRankingItem } from "./services/characterHelpers.mjs";
 import { createDownloadConfigService } from "./services/downloadConfigService.mjs";
+import { createTelegramService } from "./services/telegramService.mjs";
 
 export { loadConfig } from "./config.mjs";
 export { normalizeCharacterClass, normalizeCharacterRankingItem } from "./services/characterHelpers.mjs";
@@ -90,6 +91,21 @@ async function readJsonBody(request, maximum = 16384) {
   }
 }
 
+function decodePaymentSlip(value) {
+  const encoded = String(value ?? "").replace(/^data:[^;]+;base64,/, "");
+  if (!/^[A-Za-z0-9+/]+={0,2}$/.test(encoded)) throw new StoreError(400, "INVALID_SLIP", "Invalid slip encoding.");
+  const bytes = Buffer.from(encoded, "base64");
+  if (bytes.length < 1024 || bytes.length > 5 * 1024 * 1024) {
+    throw new StoreError(400, "INVALID_SLIP_SIZE", "Slip image must be between 1 KB and 5 MB.");
+  }
+  if (bytes.subarray(0, 3).equals(Buffer.from([0xff, 0xd8, 0xff]))) return { bytes, contentType: "image/jpeg", extension: ".jpg" };
+  if (bytes.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))) return { bytes, contentType: "image/png", extension: ".png" };
+  if (bytes.subarray(0, 4).toString("ascii") === "RIFF" && bytes.subarray(8, 12).toString("ascii") === "WEBP") {
+    return { bytes, contentType: "image/webp", extension: ".webp" };
+  }
+  throw new StoreError(400, "INVALID_SLIP_TYPE", "Only JPEG, PNG and WebP slip images are accepted.");
+}
+
 function handleError(response, error) {
   if (error instanceof StoreError) {
     return json(response, error.status, {
@@ -164,6 +180,7 @@ export function createHandler(config, deps = {}) {
     deps.walletService ?? createWalletService({ config, store, openmuClient, paypalClient });
   const checkRateLimit = createRateLimiter();
   const downloadConfigService = deps.downloadConfigService ?? createDownloadConfigService(config);
+  const telegramService = deps.telegramService ?? createTelegramService(config, deps.fetchImpl);
 
   async function requirePlayer(request, response) {
     const session = await sessions.resolveSession(request, "player");
@@ -509,6 +526,42 @@ export function createHandler(config, deps = {}) {
         return json(response, 200, { order });
       }
 
+      const slipUploadMatch = pathname.match(/^\/api\/topup\/orders\/([^/]+)\/slip$/);
+      if (slipUploadMatch && method === "POST") {
+        const session = await requirePlayer(request, response);
+        if (!session) return;
+        if (checkRateLimit("slip-upload", session.loginName, { limit: 3, windowMs: 60_000 }).limited) {
+          return json(response, 429, { success: false, code: "RATE_LIMITED", message: "Too many slip uploads." });
+        }
+        const orderId = decodeURIComponent(slipUploadMatch[1]);
+        const order = await store.getTopupOrder({ orderId });
+        if (!order || order.loginName !== session.loginName) {
+          return json(response, 404, { success: false, code: "ORDER_NOT_FOUND", message: "Top-up order not found." });
+        }
+        if (order.provider !== "promptpay_manual" || order.status !== "PENDING_PAYMENT" || order.hasSlip) {
+          throw new StoreError(409, "SLIP_NOT_ACCEPTED", "This order cannot accept another slip.");
+        }
+        const raw = await readJsonBody(request, 7 * 1024 * 1024);
+        const { bytes, contentType, extension } = decodePaymentSlip(raw?.dataBase64);
+        const sha256 = crypto.createHash("sha256").update(bytes).digest("hex");
+        const storageName = `${crypto.randomUUID()}${extension}`;
+        const originalName = path.basename(String(raw?.fileName ?? "payment-slip")).slice(0, 120);
+        await fs.mkdir(config.paymentSlipDirectory, { recursive: true });
+        const target = path.join(config.paymentSlipDirectory, storageName);
+        await fs.writeFile(target, bytes, { flag: "wx", mode: 0o600 });
+        let updated;
+        try {
+          updated = await store.attachPaymentSlip({ orderId, loginName: session.loginName, storageName, contentType, sha256, originalName, ipAddress });
+        } catch (error) {
+          await fs.unlink(target).catch(() => undefined);
+          throw error;
+        }
+        const approveUrl = `${config.publicWebUrl}/admin/dashboard?order=${encodeURIComponent(orderId)}`;
+        telegramService.notifySlip({ order: updated, bytes, contentType, approveUrl })
+          .catch((error) => console.error("[Telegram slip notification]", error?.message || "failed"));
+        return json(response, 201, { success: true, order: updated, telegramNotified: telegramService.enabled });
+      }
+
       const paypalCaptureMatch = pathname.match(/^\/api\/topup\/orders\/([^/]+)\/paypal-capture$/);
       if (paypalCaptureMatch && method === "POST") {
         const session = await requirePlayer(request, response);
@@ -838,11 +891,39 @@ export function createHandler(config, deps = {}) {
         return json(response, 200, { orders });
       }
 
+      const adminSlipMatch = pathname.match(/^\/api\/admin\/topup\/orders\/([^/]+)\/slip$/);
+      if (adminSlipMatch && method === "GET") {
+        const admin = await requireAdmin(request, response);
+        if (!admin) return;
+        const order = await store.getTopupOrder({ orderId: decodeURIComponent(adminSlipMatch[1]) });
+        if (!order?.slipStorageName || !order.slipContentType) {
+          return json(response, 404, { success: false, code: "SLIP_NOT_FOUND", message: "Slip not found." });
+        }
+        const safeName = path.basename(order.slipStorageName);
+        const data = await fs.readFile(path.join(config.paymentSlipDirectory, safeName));
+        response.writeHead(200, {
+          "Content-Type": order.slipContentType,
+          "Content-Length": data.length,
+          "Cache-Control": "private, no-store",
+          "Content-Disposition": "inline",
+          "X-Content-Type-Options": "nosniff",
+        });
+        response.end(data);
+        return;
+      }
+
       const adminConfirmTopupMatch = pathname.match(/^\/api\/admin\/topup\/orders\/([^/]+)\/confirm$/);
       if (adminConfirmTopupMatch && method === "POST") {
         const admin = await requireAdmin(request, response);
         if (!admin) return;
         const orderId = decodeURIComponent(adminConfirmTopupMatch[1]);
+        const order = await store.getTopupOrder({ orderId });
+        if (!order) {
+          return json(response, 404, { success: false, code: "ORDER_NOT_FOUND", message: "Top-up order not found." });
+        }
+        if (order.provider === "promptpay_manual" && !order.hasSlip) {
+          throw new StoreError(409, "SLIP_REQUIRED", "A payment slip must be submitted before this order can be approved.");
+        }
         const raw = await readJsonBody(request);
         const reference = String(raw?.providerTransactionId || `ADMIN-${admin.loginName}-${Date.now()}`).trim();
         const result = await walletService.fulfillPaidOrder({

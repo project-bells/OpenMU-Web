@@ -251,6 +251,8 @@ export interface TopupOrderRecord {
   expiresAt?: string | null;
   paidAt?: string | null;
   fulfilledAt?: string | null;
+  hasSlip?: boolean;
+  slipSubmittedAt?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -1027,6 +1029,24 @@ export async function fetchTopupOrders(): Promise<TopupOrderRecord[]> {
 export async function fetchTopupOrder(orderId: string): Promise<TopupOrderRecord> {
   const data = await apiJson<{ order: any }>(`/api/topup/orders/${encodeURIComponent(orderId)}`);
   return normalizeTopupOrder(data.order);
+}
+
+export async function uploadTopupSlip(orderId: string, file: File): Promise<{ success: boolean; order?: TopupOrderRecord; error?: string }> {
+  try {
+    const dataBase64 = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result || ""));
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(file);
+    });
+    const result = await apiJson<any>(`/api/topup/orders/${encodeURIComponent(orderId)}/slip`, {
+      method: "POST",
+      body: JSON.stringify({ fileName: file.name, dataBase64 }),
+    });
+    return { success: true, order: result.order ? normalizeTopupOrder(result.order) : undefined };
+  } catch (err: any) {
+    return { success: false, error: err?.message || "Slip upload failed" };
+  }
 }
 
 export async function capturePaypalTopupOrder(

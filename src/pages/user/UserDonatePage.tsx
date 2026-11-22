@@ -11,6 +11,7 @@ import {
   ExternalLink,
   RefreshCw,
   FlaskConical,
+  Upload,
 } from "lucide-react";
 import {
   type TopupOrderRecord,
@@ -21,6 +22,7 @@ import {
   createTopupOrder,
   fetchTopupOrder,
   fetchTopupCatalog,
+  uploadTopupSlip,
 } from "../../services/dbApi";
 import { useUserDashboard } from "../../context/UserDashboardContext";
 
@@ -44,6 +46,7 @@ export default function UserDonatePage() {
   const [loading, setLoading] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<{ ok: boolean; text: string } | null>(null);
+  const [slipFile, setSlipFile] = useState<File | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -190,6 +193,22 @@ export default function UserDonatePage() {
       });
     } else {
       setFeedback({ ok: false, text: res.error || "Sandbox confirmation failed" });
+    }
+  };
+
+  const handleSlipUpload = async () => {
+    if (!activeOrder || !slipFile || loading) return;
+    setLoading(true);
+    setFeedback(null);
+    const result = await uploadTopupSlip(activeOrder.id, slipFile);
+    setLoading(false);
+    if (result.success && result.order) {
+      setActiveOrder(result.order);
+      setSlipFile(null);
+      setFeedback({ ok: true, text: "ส่งสลิปแล้ว กรุณารอ Admin ตรวจสอบยอดก่อนรับเครดิต" });
+      await refreshSummary();
+    } else {
+      setFeedback({ ok: false, text: result.error || "ส่งสลิปไม่สำเร็จ" });
     }
   };
 
@@ -388,6 +407,33 @@ export default function UserDonatePage() {
                 <p className="text-[11px] text-slate-400">
                   สถานะนี้ยังไม่เพิ่ม Credits/WCoinC หลังโอนแล้วต้องรอ Webhook หรือ GM กดยืนยันใน Admin Console หน้านี้จะตรวจสถานะให้อัตโนมัติทุก 5 วินาที
                 </p>
+              </div>
+            )}
+
+            {activeOrder.provider === "promptpay_manual" && activeOrder.status === "PENDING_PAYMENT" && (
+              <div className="rounded-xl border border-amber-400/30 bg-amber-500/10 p-3.5 space-y-3">
+                {activeOrder.hasSlip ? (
+                  <div className="text-xs font-bold text-emerald-300">ส่งสลิปแล้ว • รอ Admin ตรวจสอบและอนุมัติ</div>
+                ) : (
+                  <>
+                    <div className="text-xs font-bold text-amber-200">แนบสลิปหลังโอนเงิน</div>
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      onChange={(event) => setSlipFile(event.target.files?.[0] || null)}
+                      className="block w-full text-xs text-slate-300 file:mr-3 file:rounded-lg file:border-0 file:bg-amber-400 file:px-3 file:py-2 file:font-bold file:text-slate-950"
+                    />
+                    <button
+                      type="button"
+                      disabled={!slipFile || loading || (slipFile?.size || 0) > 5 * 1024 * 1024}
+                      onClick={handleSlipUpload}
+                      className="inline-flex items-center gap-2 rounded-xl bg-amber-400 px-4 py-2 text-xs font-extrabold text-slate-950 disabled:opacity-40"
+                    >
+                      <Upload className="h-3.5 w-3.5" /> ส่งสลิปให้ Admin ตรวจสอบ
+                    </button>
+                    <p className="text-[10px] text-slate-400">รองรับ JPEG, PNG, WebP ขนาดไม่เกิน 5 MB • ส่งได้ครั้งเดียวต่อออเดอร์</p>
+                  </>
+                )}
               </div>
             )}
 

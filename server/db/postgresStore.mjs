@@ -601,6 +601,27 @@ export class PostgresStore {
     return res.rows[0] ? mapOrderRow(res.rows[0]) : null;
   }
 
+  async attachPaymentSlip({ orderId, loginName, storageName, contentType, sha256, originalName, ipAddress = null }) {
+    return this.withTransaction(async (client) => {
+      const result = await client.query(
+        `UPDATE web.topup_orders
+         SET slip_storage_name = $3, slip_content_type = $4, slip_sha256 = $5,
+             slip_original_name = $6, slip_submitted_at = NOW(), updated_at = NOW()
+         WHERE id = $1 AND login_name = $2 AND provider = 'promptpay_manual'
+           AND status = 'PENDING_PAYMENT' AND slip_storage_name IS NULL
+         RETURNING *;`,
+        [orderId, normalizeLoginName(loginName), storageName, contentType, sha256, originalName]
+      );
+      if (!result.rows[0]) throw new StoreError(409, "SLIP_NOT_ACCEPTED", "Slip already submitted or order is not eligible.");
+      await insertAudit(client, {
+        actorType: "player", actorName: normalizeLoginName(loginName), action: "PAYMENT_SLIP_SUBMITTED",
+        targetType: "topup_orders", targetId: orderId, outcome: "SUCCESS", ipAddress,
+        details: { sha256, contentType },
+      });
+      return mapOrderRow(result.rows[0]);
+    });
+  }
+
   async recordWebhookEventTransaction({ provider, eventId, payloadSha256, signatureValid, rawPayload }) {
     return this.withTransaction(async (client) => {
       const existing = await client.query(
@@ -980,6 +1001,11 @@ function mapOrderRow(row) {
     openmuGrantId: row.openmu_grant_id,
     checkoutPayload: row.checkout_payload ?? {},
     failureReason: row.failure_reason,
+    hasSlip: Boolean(row.slip_storage_name),
+    slipStorageName: row.slip_storage_name,
+    slipContentType: row.slip_content_type,
+    slipOriginalName: row.slip_original_name,
+    slipSubmittedAt: row.slip_submitted_at,
     paidAt: row.paid_at,
     fulfilledAt: row.fulfilled_at,
     createdAt: row.created_at,

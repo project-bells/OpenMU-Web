@@ -257,10 +257,21 @@ export default function AdminDashboardPage() {
                       +{ord.creditsToGrant.toLocaleString()} Cr / +{ord.wcoinToGrant.toLocaleString()} WC
                     </td>
                     <td className="px-5 py-3 text-center">
+                      {ord.hasSlip && (
+                        <a
+                          href={`/api/admin/topup/orders/${encodeURIComponent(ord.id)}/slip`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="mr-2 inline-flex items-center rounded-xl border border-sky-400/40 bg-sky-500/15 px-3 py-1.5 text-xs font-bold text-sky-200"
+                        >
+                          ดูสลิป
+                        </a>
+                      )}
                       <button
                         type="button"
+                        disabled={ord.provider === "promptpay_manual" && !ord.hasSlip}
                         onClick={() => handleConfirmOrder(ord)}
-                        className="inline-flex items-center gap-1 rounded-xl bg-emerald-400 px-3 py-1.5 text-xs font-extrabold text-slate-950 hover:brightness-110"
+                        className="inline-flex items-center gap-1 rounded-xl bg-emerald-400 px-3 py-1.5 text-xs font-extrabold text-slate-950 hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40"
                       >
                         <Check className="h-3.5 w-3.5" /> ยืนยันยอดเข้า
                       </button>

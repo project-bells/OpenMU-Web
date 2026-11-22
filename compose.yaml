@@ -40,11 +40,16 @@ services:
       PAYPAL_CLIENT_ID: ${PAYPAL_CLIENT_ID:-}
       PAYPAL_CLIENT_SECRET: ${PAYPAL_CLIENT_SECRET:-}
       PAYPAL_WEBHOOK_ID: ${PAYPAL_WEBHOOK_ID:-}
+      PAYMENT_SLIP_DIRECTORY: /app/data/payment-slips
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID:-}
       TRUST_PROXY: "true"
       UPSTREAM_TIMEOUT_MS: ${UPSTREAM_TIMEOUT_MS:-8000}
     ports:
       - "${WEB_PORT:-8080}:8080"
     read_only: true
+    volumes:
+      - openmu-web-slips:/app/data/payment-slips
     tmpfs:
       - /tmp
     security_opt:
@@ -52,3 +57,4 @@ services:
 
 volumes:
   openmu-web-postgres:
+  openmu-web-slips:

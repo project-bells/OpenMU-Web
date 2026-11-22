@@ -429,6 +429,20 @@ export class InMemoryWebStore {
     return { ...order };
   }
 
+  async attachPaymentSlip({ orderId, loginName, storageName, contentType, sha256, originalName }) {
+    const order = this.orders.find((item) => item.id === orderId && item.loginName === normalizeLoginName(loginName));
+    if (!order || order.provider !== "promptpay_manual" || order.status !== "PENDING_PAYMENT" || order.hasSlip) {
+      throw new StoreError(409, "SLIP_NOT_ACCEPTED", "Slip already submitted or order is not eligible.");
+    }
+    order.hasSlip = true;
+    order.slipStorageName = storageName;
+    order.slipContentType = contentType;
+    order.slipOriginalName = originalName;
+    order.slipSha256 = sha256;
+    order.slipSubmittedAt = new Date().toISOString();
+    return { ...order };
+  }
+
   async recordWebhookEventTransaction({ provider, eventId, payloadSha256, signatureValid, rawPayload }) {
     const existing = this.webhookEvents.find((w) => w.provider === provider && w.eventId === eventId);
     if (existing) return { duplicate: true, event: { ...existing } };

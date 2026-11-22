@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import crypto from "node:crypto";
 import fs from "node:fs";
 import { createServer } from "node:http";
+import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
@@ -384,6 +385,9 @@ test("PostgreSQL initial migration defines required web tables, UNIQUE keys, and
   assert.ok(vipSql.includes("web.vip_purchases"));
   assert.ok(vipSql.includes("VIP_PURCHASE_DEBIT"));
   assert.ok(vipSql.includes("VIP_PURCHASE_REVERSAL"));
+  const slipSql = fs.readFileSync(path.join(__dirname, "db", "migrations", "003_payment_slips.sql"), "utf8");
+  assert.ok(slipSql.includes("slip_sha256"));
+  assert.ok(slipSql.includes("ux_topup_orders_slip_sha256"));
 });
 
 test("validation, character normalization, PromptPay EMVCo payload, and HMAC helpers work correctly", () => {
@@ -745,6 +749,25 @@ test("Full BFF integration: Auth isolation, P0-A Online Rewards, P0-B Credit Exc
     body: JSON.stringify({ packageId: "tier-50", provider: "promptpay_manual" }),
   });
   const pendingQrOrder = (await pendingQr.json()).order;
+
+  const confirmWithoutSlip = await fetch(`${bff.url}/api/admin/topup/orders/${pendingQrOrder.id}/confirm`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Cookie: adminCookieHeader },
+    body: JSON.stringify({ providerTransactionId: "SLIP-MISSING" }),
+  });
+  assert.equal(confirmWithoutSlip.status, 409);
+
+  const slipDirectory = fs.mkdtempSync(path.join(os.tmpdir(), "openmu-slip-test-"));
+  config.paymentSlipDirectory = slipDirectory;
+  t.after(() => fs.rmSync(slipDirectory, { recursive: true, force: true }));
+  const pngHeader = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+  const slipBytes = Buffer.concat([pngHeader, Buffer.alloc(1200, 1)]);
+  const slipUpload = await fetch(`${bff.url}/api/topup/orders/${pendingQrOrder.id}/slip`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Cookie: playerCookieHeader },
+    body: JSON.stringify({ fileName: "promptpay.png", dataBase64: slipBytes.toString("base64") }),
+  });
+  assert.equal(slipUpload.status, 201);
 
   const gmConfirm = await fetch(`${bff.url}/api/admin/topup/orders/${pendingQrOrder.id}/confirm`, {
     method: "POST",
