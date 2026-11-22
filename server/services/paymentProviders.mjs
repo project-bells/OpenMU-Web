@@ -90,6 +90,16 @@ export function verifyWebhookHmacSignature({ rawBody, headers, secret, nowSecond
 export function createPayPalClient(config, fetchImpl = fetch) {
   const baseUrl = config.paypalEnv === "live" ? "https://api-m.paypal.com" : "https://api-m.sandbox.paypal.com";
 
+  function getPayPalAmount(priceThb) {
+    const currency = config.paypalEnv === "live" ? "THB" : config.paypalCurrency || "THB";
+    const numericPriceThb = Number(priceThb);
+    const value =
+      currency === "USD"
+        ? numericPriceThb / Math.max(Number(config.paypalThbPerUsd || 35), 0.01)
+        : numericPriceThb;
+    return { currency, value: value.toFixed(2) };
+  }
+
   function isConfigured() {
     return Boolean(config.paypalClientId && config.paypalClientSecret);
   }
@@ -116,6 +126,7 @@ export function createPayPalClient(config, fetchImpl = fetch) {
 
   async function createOrder({ order, packageDef }) {
     const token = await getAccessToken();
+    const paypalAmount = getPayPalAmount(packageDef.priceThb);
     const response = await fetchImpl(`${baseUrl}/v2/checkout/orders`, {
       method: "POST",
       headers: {
@@ -131,8 +142,8 @@ export function createPayPalClient(config, fetchImpl = fetch) {
             custom_id: order.id,
             description: `OpenMU-Origins ${packageDef.name} (${packageDef.id})`,
             amount: {
-              currency_code: "THB",
-              value: Number(packageDef.priceThb).toFixed(2),
+              currency_code: paypalAmount.currency,
+              value: paypalAmount.value,
             },
           },
         ],
@@ -152,6 +163,7 @@ export function createPayPalClient(config, fetchImpl = fetch) {
 
   async function captureOrder({ providerOrderId, expectedAmountThb }) {
     const token = await getAccessToken();
+    const expectedPayPalAmount = getPayPalAmount(expectedAmountThb);
     const response = await fetchImpl(`${baseUrl}/v2/checkout/orders/${encodeURIComponent(providerOrderId)}/capture`, {
       method: "POST",
       headers: {
@@ -170,7 +182,10 @@ export function createPayPalClient(config, fetchImpl = fetch) {
     const capture = data.purchase_units?.[0]?.payments?.captures?.[0];
     const paidValue = Number(capture?.amount?.value);
     const currency = capture?.amount?.currency_code;
-    if (currency !== "THB" || Math.abs(paidValue - Number(expectedAmountThb)) > 0.01) {
+    if (
+      currency !== expectedPayPalAmount.currency ||
+      Math.abs(paidValue - Number(expectedPayPalAmount.value)) > 0.01
+    ) {
       throw new StoreError(400, "PAYPAL_AMOUNT_MISMATCH", "Captured PayPal amount or currency does not match the order.");
     }
     return {

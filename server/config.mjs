@@ -147,6 +147,13 @@ export function loadConfig(env = process.env) {
     paypalClientId: String(env.PAYPAL_CLIENT_ID ?? "").trim(),
     paypalClientSecret: String(env.PAYPAL_CLIENT_SECRET ?? "").trim(),
     paypalEnv: String(env.PAYPAL_ENV ?? "sandbox").trim().toLowerCase() === "live" ? "live" : "sandbox",
+    paypalCurrency:
+      String(env.PAYPAL_ENV ?? "sandbox").trim().toLowerCase() === "live"
+        ? "THB"
+        : String(env.PAYPAL_CURRENCY ?? "THB").trim().toUpperCase() === "USD"
+          ? "USD"
+          : "THB",
+    paypalThbPerUsd: Math.max(Number(env.PAYPAL_THB_PER_USD ?? "35"), 0.01),
     paypalWebhookId: String(env.PAYPAL_WEBHOOK_ID ?? "").trim(),
     publicWebUrl: String(env.PUBLIC_WEB_URL ?? "http://localhost:8080").replace(/\/+$/, ""),
     downloadConfigPath: String(env.DOWNLOAD_CONFIG_PATH ?? "data/download-client.json").trim(),
