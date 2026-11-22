@@ -22,6 +22,10 @@ function formatDuration(totalSeconds: number): string {
   return `${h.toLocaleString()} ชม. ${m} นาที`;
 }
 
+function cleanClassName(value: string): string {
+  return value.split("|")[0]?.trim() || "Unknown";
+}
+
 export default function UserExchangePage() {
   const {
     availableHours,
@@ -220,7 +224,7 @@ export default function UserExchangePage() {
               <option value="">เลือกตัวละครที่จะรับชุด</option>
               {characters.map((character) => (
                 <option key={character.name} value={character.name}>
-                  {character.name} — {character.className}
+                  {character.name} — {cleanClassName(character.className)}
                 </option>
               ))}
             </select>
