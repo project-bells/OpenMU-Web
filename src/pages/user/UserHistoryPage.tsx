@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { History, Coins, Clock, Gem, Wallet } from "lucide-react";
+import { History, Coins, Clock, Gem, Wallet, Crown } from "lucide-react";
 import { useUserDashboard } from "../../context/UserDashboardContext";
 
-type TabType = "ledger" | "redemptions" | "exchanges" | "orders";
+type TabType = "ledger" | "redemptions" | "exchanges" | "vip" | "orders";
 
 export default function UserHistoryPage() {
-  const { ledger, redemptions, exchanges, orders } = useUserDashboard();
+  const { ledger, redemptions, exchanges, vipPurchases, orders } = useUserDashboard();
   const [tab, setTab] = useState<TabType>("ledger");
 
   return (
@@ -25,6 +25,7 @@ export default function UserHistoryPage() {
             { id: "ledger" as const, label: `สมุดบัญชี (${ledger.length})`, icon: Coins },
             { id: "redemptions" as const, label: `เวลาออนไลน์ (${redemptions.length})`, icon: Clock },
             { id: "exchanges" as const, label: `แลก WCoinC (${exchanges.length})`, icon: Gem },
+            { id: "vip" as const, label: `ซื้อ VIP (${vipPurchases.length})`, icon: Crown },
             { id: "orders" as const, label: `เติมเงิน (${orders.length})`, icon: Wallet },
           ].map((item) => {
             const Icon = item.icon;
@@ -54,6 +55,7 @@ export default function UserHistoryPage() {
             {tab === "ledger" && "สมุดบันทึกรายการ Credits (Immutable Wallet Ledger)"}
             {tab === "redemptions" && "ประวัติการแลกเวลาออนไลน์เป็น Credits"}
             {tab === "exchanges" && "ประวัติการแลก Credits เป็น WCoinC"}
+            {tab === "vip" && "ประวัติซื้อ VIP ด้วย Credits"}
             {tab === "orders" && "ประวัติคำสั่งซื้อเติมเงิน Top-Up"}
           </h2>
         </div>
@@ -205,6 +207,26 @@ export default function UserHistoryPage() {
                     </tr>
                   ))
                 )}
+              </tbody>
+            </table>
+          )}
+
+          {tab === "vip" && (
+            <table className="w-full text-left text-xs">
+              <thead><tr className="border-b border-white/10 bg-white/[0.02] text-[10px] uppercase text-slate-400">
+                <th className="px-5 py-3">เวลา</th><th className="px-5 py-3 text-right">Credits</th>
+                <th className="px-5 py-3 text-center">ระยะเวลา</th><th className="px-5 py-3">VIP ถึง</th><th className="px-5 py-3 text-center">สถานะ</th>
+              </tr></thead>
+              <tbody className="divide-y divide-white/5">
+                {vipPurchases.length === 0 ? <tr><td colSpan={5} className="py-12 text-center text-slate-500">ยังไม่มีประวัติซื้อ VIP</td></tr> : vipPurchases.map((p) => (
+                  <tr key={p.id}>
+                    <td className="px-5 py-3 font-mono text-[11px] text-slate-300">{new Date(p.createdAt).toLocaleString("th-TH")}</td>
+                    <td className="px-5 py-3 text-right font-mono text-rose-300">-{p.creditsSpent.toLocaleString()} Cr</td>
+                    <td className="px-5 py-3 text-center font-mono text-amber-300">+{p.durationDays} วัน</td>
+                    <td className="px-5 py-3 font-mono text-amber-200">{p.vipUntil ? new Date(p.vipUntil).toLocaleString("th-TH") : "-"}</td>
+                    <td className="px-5 py-3 text-center font-mono text-emerald-300">{p.status}</td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           )}

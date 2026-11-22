@@ -34,6 +34,7 @@ export default function UserExchangePage() {
     exchangeCredits,
     redemptions,
     exchanges,
+    orders,
     account,
     refreshSummary,
   } = useUserDashboard();
@@ -475,6 +476,29 @@ export default function UserExchangePage() {
             </table>
           </div>
         </div>
+      </div>
+
+      <div className="overflow-hidden rounded-3xl border border-white/10 bg-[#090d18]/70 shadow-xl">
+        <div className="flex items-center justify-between border-b border-white/10 bg-white/[0.02] px-5 py-3.5">
+          <div className="flex items-center gap-2"><Coins className="h-4 w-4 text-amber-400" /><h3 className="text-sm font-bold text-white">ประวัติการเติม Credits</h3></div>
+          <span className="font-mono text-[11px] text-slate-400">{orders.length} รายการ</span>
+        </div>
+        <div className="overflow-x-auto"><table className="w-full text-left text-xs">
+          <thead><tr className="border-b border-white/10 text-[10px] uppercase text-slate-400">
+            <th className="px-4 py-3">เวลา</th><th className="px-4 py-3">แพ็กเกจ</th><th className="px-4 py-3">ช่องทาง</th><th className="px-4 py-3 text-right">Credits</th><th className="px-4 py-3 text-center">สถานะ</th>
+          </tr></thead>
+          <tbody className="divide-y divide-white/5">
+            {orders.length === 0 ? <tr><td colSpan={5} className="py-8 text-center text-slate-500">ยังไม่มีประวัติการเติม Credits</td></tr> : orders.slice(0, 10).map((ord) => (
+              <tr key={ord.id}>
+                <td className="px-4 py-2.5 font-mono text-[11px] text-slate-300">{new Date(ord.createdAt).toLocaleString("th-TH")}</td>
+                <td className="px-4 py-2.5 text-slate-200">{ord.packageName || ord.packageId}</td>
+                <td className="px-4 py-2.5 font-mono text-slate-400">{ord.provider}</td>
+                <td className="px-4 py-2.5 text-right font-mono font-bold text-amber-300">+{ord.creditsToGrant.toLocaleString()} Cr</td>
+                <td className="px-4 py-2.5 text-center font-mono text-emerald-300">{ord.status}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table></div>
       </div>
     </div>
   );

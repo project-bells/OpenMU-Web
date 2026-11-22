@@ -6,6 +6,7 @@ import {
   type OpenMuCharacter,
   type PlayerSessionSummary,
   type TopupOrderRecord,
+  type VipPurchaseRecord,
   type WalletLedgerEntry,
   type WalletState,
   exchangeCreditsToWcoin,
@@ -35,6 +36,7 @@ interface UserDashboardContextType {
   ledger: WalletLedgerEntry[];
   redemptions: OnlineTimeRedemptionRecord[];
   exchanges: CreditExchangeRecord[];
+  vipPurchases: VipPurchaseRecord[];
   orders: TopupOrderRecord[];
   refreshSummary: () => Promise<PlayerSessionSummary | null>;
   loginPlayer: (username: string, password: string) => Promise<{ ok: boolean; error?: string }>;
@@ -197,6 +199,7 @@ export function UserDashboardProvider({ children }: { children: ReactNode }) {
       ledger: summary?.ledger ?? [],
       redemptions: summary?.redemptions ?? [],
       exchanges: summary?.exchanges ?? [],
+      vipPurchases: summary?.vipPurchases ?? [],
       orders: summary?.orders ?? [],
     };
   }, [summary]);

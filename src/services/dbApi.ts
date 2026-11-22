@@ -192,6 +192,19 @@ export interface CreditExchangeRecord {
   updatedAt: string;
 }
 
+export interface VipPurchaseRecord {
+  id: string;
+  loginName: string;
+  creditsSpent: number;
+  durationDays: number;
+  status: string;
+  openmuReference: string;
+  vipUntil?: string | null;
+  lastError?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface TopupPackage {
   id: string;
   name: string;
@@ -257,6 +270,7 @@ export interface PlayerSessionSummary {
   ledger: WalletLedgerEntry[];
   redemptions: OnlineTimeRedemptionRecord[];
   exchanges: CreditExchangeRecord[];
+  vipPurchases: VipPurchaseRecord[];
   orders: TopupOrderRecord[];
   onlineRewardConfig?: {
     secondsPerHour: number;
@@ -709,6 +723,18 @@ export function normalizePlayerSummary(raw: any): PlayerSessionSummary {
   }));
 
   const orders: TopupOrderRecord[] = (Array.isArray(raw?.orders) ? raw.orders : []).map(normalizeTopupOrder);
+  const vipPurchases: VipPurchaseRecord[] = (Array.isArray(raw?.vipPurchases) ? raw.vipPurchases : []).map((p: any) => ({
+    id: String(p.id ?? ""),
+    loginName: String(p.loginName ?? account.loginName),
+    creditsSpent: Number(p.creditsSpent ?? 0),
+    durationDays: Number(p.durationDays ?? 0),
+    status: String(p.status ?? ""),
+    openmuReference: String(p.openmuReference ?? ""),
+    vipUntil: p.vipUntil ?? null,
+    lastError: p.lastError ?? null,
+    createdAt: String(p.createdAt ?? ""),
+    updatedAt: String(p.updatedAt ?? ""),
+  }));
 
   return {
     authenticated: Boolean(raw?.authenticated ?? true),
@@ -718,6 +744,7 @@ export function normalizePlayerSummary(raw: any): PlayerSessionSummary {
     ledger,
     redemptions,
     exchanges,
+    vipPurchases,
     orders,
     onlineRewardConfig: raw?.onlineRewardConfig ?? {
       secondsPerHour: 3600,
@@ -941,7 +968,7 @@ export async function purchaseVipMembership(
     const summary = normalizePlayerSummary(res);
     return {
       success: true,
-      vipUntil: summary.account.vipUntil ?? res.purchase?.vipUntil ?? null,
+      vipUntil: res.purchase?.vipUntil ?? summary.account.vipUntil ?? null,
       remainingCredits: summary.wallet.credits,
     };
   } catch (err: any) {

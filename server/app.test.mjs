@@ -830,4 +830,16 @@ test("Full BFF integration: Auth isolation, P0-A Online Rewards, P0-B Credit Exc
   });
   assert.equal(creditVipReplay.status, 200);
   assert.equal((await creditVipReplay.json()).wallet.creditsBalance, 13950);
+
+  const firstCreditPurchaseExpiry = new Date(fakeOpenMu.accounts.get("hero01").vipUntil).getTime();
+  const secondCreditVip = await fetch(`${bff.url}/api/vip/purchase`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Cookie: playerCookieHeader, "Idempotency-Key": "credit-vip-2" },
+    body: JSON.stringify({}),
+  });
+  assert.equal(secondCreditVip.status, 200);
+  const secondCreditVipBody = await secondCreditVip.json();
+  assert.equal(secondCreditVipBody.wallet.creditsBalance, 13650);
+  assert.equal(secondCreditVipBody.purchase.status, "COMPLETED");
+  assert.ok(new Date(secondCreditVipBody.purchase.vipUntil).getTime() >= firstCreditPurchaseExpiry + (30 * 86_400_000));
 });
