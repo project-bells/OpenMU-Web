@@ -130,6 +130,10 @@ export function createOpenMuClient(config, fetchImpl = fetch) {
         method: "POST",
         body: { packageSequence, priceSequence, reason, reference },
       }),
+    getCashShopItemGrantByReference: (loginName, reference) => {
+      const query = new URLSearchParams({ reference });
+      return request(`/api/accounts/${encodeURIComponent(loginName)}/cash-shop/item-grants/by-reference?${query}`);
+    },
     grantVipMembership: (loginName, { durationDays, reason, reference }) =>
       request(`/api/accounts/${encodeURIComponent(loginName)}/cash-shop/vip-grants`, {
         method: "POST",

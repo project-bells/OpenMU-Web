@@ -403,6 +403,22 @@ export function createHandler(config, deps = {}) {
         return json(response, 200, { success: true, ...result, ...summary });
       }
 
+      if (pathname === "/api/starter-kit/status" && method === "GET") {
+        const session = await requirePlayer(request, response);
+        if (!session) return;
+        const reference = `starter-kit-v1:${session.loginName.toLowerCase()}`;
+        try {
+          const { data: grant } = await openmuClient.getCashShopItemGrantByReference(session.loginName, reference);
+          return json(response, 200, { claimed: true, grant });
+        } catch (error) {
+          if (error instanceof UpstreamError && error.status === 404) {
+            return json(response, 200, { claimed: false });
+          }
+
+          throw error;
+        }
+      }
+
       if (pathname === "/api/starter-kit/claim" && method === "POST") {
         const session = await requirePlayer(request, response);
         if (!session) return;
@@ -445,13 +461,15 @@ export function createHandler(config, deps = {}) {
           ipAddress,
           metadata: { packageSequence },
         });
-        return json(response, status === 201 ? 201 : 200, {
-          success: true,
+        return json(response, status === 201 ? 201 : 409, {
+          success: status === 201,
           idempotent: status !== 201,
           characterName,
           packageSequence,
           grant,
-          message: "Starter Kit was added to Item Mall storage.",
+          message: status === 201
+            ? "Starter Kit was added to Item Mall storage."
+            : "This account has already claimed its Starter Kit.",
         });
       }
 

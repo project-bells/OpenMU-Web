@@ -1,4 +1,4 @@
-import { useState, FormEvent } from "react";
+import { useEffect, useState, FormEvent } from "react";
 import {
   Coins,
   Clock,
@@ -13,7 +13,7 @@ import {
   Gift,
 } from "lucide-react";
 import { useUserDashboard } from "../../context/UserDashboardContext";
-import { claimStarterKit, purchaseVipMembership } from "../../services/dbApi";
+import { claimStarterKit, getStarterKitStatus, purchaseVipMembership } from "../../services/dbApi";
 
 function formatDuration(totalSeconds: number): string {
   const safe = Math.max(0, Math.floor(totalSeconds));
@@ -56,9 +56,24 @@ export default function UserExchangePage() {
   const [vipFeedback, setVipFeedback] = useState<{ ok: boolean; message: string } | null>(null);
   const [starterCharacter, setStarterCharacter] = useState("");
   const [claimingStarter, setClaimingStarter] = useState(false);
+  const [starterStatusLoading, setStarterStatusLoading] = useState(true);
+  const [starterClaimed, setStarterClaimed] = useState(false);
   const [starterFeedback, setStarterFeedback] = useState<{ ok: boolean; message: string } | null>(null);
   const vipUntil = account?.vipUntil ? new Date(account.vipUntil) : null;
   const isVip = Boolean(vipUntil && vipUntil.getTime() > Date.now());
+
+  useEffect(() => {
+    let active = true;
+    getStarterKitStatus()
+      .then((status) => {
+        if (active) setStarterClaimed(status.claimed);
+      })
+      .catch(() => undefined)
+      .finally(() => {
+        if (active) setStarterStatusLoading(false);
+      });
+    return () => { active = false; };
+  }, []);
 
   const numericHours = parseInt(hoursInput, 10);
   const isValidHours = !Number.isNaN(numericHours) && numericHours > 0;
@@ -120,11 +135,12 @@ export default function UserExchangePage() {
   };
 
   const handleStarterClaim = async () => {
-    if (!starterCharacter || claimingStarter) return;
+    if (!starterCharacter || claimingStarter || starterClaimed) return;
     setClaimingStarter(true);
     setStarterFeedback(null);
     const result = await claimStarterKit(starterCharacter);
     setClaimingStarter(false);
+    if (result.success || result.idempotent) setStarterClaimed(true);
     setStarterFeedback({
       ok: result.success,
       message: result.success
@@ -214,6 +230,7 @@ export default function UserExchangePage() {
           </div>
           <div className="flex w-full flex-col gap-2 lg:w-[360px]">
             <select
+              disabled={starterClaimed || starterStatusLoading}
               value={starterCharacter}
               onChange={(event) => {
                 setStarterCharacter(event.target.value);
@@ -230,17 +247,22 @@ export default function UserExchangePage() {
             </select>
             <button
               type="button"
-              disabled={!starterCharacter || claimingStarter}
+              disabled={!starterCharacter || claimingStarter || starterClaimed || starterStatusLoading}
               onClick={handleStarterClaim}
               className="btn-shine rounded-2xl bg-gradient-to-r from-amber-400 to-orange-500 px-5 py-3 text-sm font-black text-slate-950 disabled:cursor-not-allowed disabled:opacity-40"
             >
-              {claimingStarter ? "กำลังส่งเข้า Item Mall..." : "รับ Starter Kit ฟรี"}
+              {starterStatusLoading ? "กำลังตรวจสอบ..." : starterClaimed ? "รับ Starter Kit แล้ว" : claimingStarter ? "กำลังส่งเข้า Item Mall..." : "รับ Starter Kit ฟรี"}
             </button>
           </div>
         </div>
         {starterFeedback && (
           <div className={`mt-4 rounded-2xl border p-3 text-xs font-bold ${starterFeedback.ok ? "border-emerald-400/40 bg-emerald-500/15 text-emerald-300" : "border-rose-400/40 bg-rose-500/15 text-rose-300"}`}>
             {starterFeedback.message}
+          </div>
+        )}
+        {starterClaimed && !starterFeedback && (
+          <div className="mt-4 rounded-2xl border border-emerald-400/40 bg-emerald-500/15 p-3 text-xs font-bold text-emerald-300">
+            บัญชีนี้รับ Starter Kit ไปแล้ว ไม่สามารถรับซ้ำได้
           </div>
         )}
       </div>

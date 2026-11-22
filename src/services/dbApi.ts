@@ -989,6 +989,10 @@ export async function claimStarterKit(
   }
 }
 
+export async function getStarterKitStatus(): Promise<{ claimed: boolean }> {
+  return apiJson("/api/starter-kit/status");
+}
+
 export async function createTopupOrder(
   packageId: string,
   provider: "promptpay_manual" | "paypal" | "webhook_hmac" | "dev_sandbox",
