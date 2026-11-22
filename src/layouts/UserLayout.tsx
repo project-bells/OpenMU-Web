@@ -35,6 +35,7 @@ export default function UserLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
   const vipUntil = account?.vipUntil ? new Date(account.vipUntil) : null;
   const isVip = Boolean(vipUntil && vipUntil.getTime() > Date.now());
 
@@ -71,8 +72,14 @@ export default function UserLayout() {
   ];
 
   const handleLogout = async () => {
-    await logoutPlayer();
-    navigate("/");
+    if (loggingOut) return;
+    setLoggingOut(true);
+    try {
+      await logoutPlayer();
+      navigate("/", { replace: true });
+    } finally {
+      setLoggingOut(false);
+    }
   };
 
   if (isLoading) {
@@ -223,10 +230,11 @@ export default function UserLayout() {
         <div className="border-t border-white/10 p-4">
           <button
             onClick={handleLogout}
+            disabled={loggingOut}
             className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 py-2.5 text-xs font-bold text-slate-300 transition hover:bg-rose-500/20 hover:text-rose-300"
           >
             <LogOut className="h-4 w-4" />
-            <span>ออกจากระบบ (Logout)</span>
+            <span>{loggingOut ? "กำลังออกจากระบบ..." : "ออกจากระบบ (Logout)"}</span>
           </button>
         </div>
       </aside>
@@ -290,6 +298,18 @@ export default function UserLayout() {
                 <div className="text-[10px] text-slate-400">Player Account</div>
               </div>
             </div>
+
+            <button
+              type="button"
+              onClick={handleLogout}
+              disabled={loggingOut}
+              title="ออกจากระบบ"
+              aria-label="ออกจากระบบ"
+              className="inline-flex h-9 items-center justify-center gap-1.5 rounded-xl border border-rose-400/30 bg-rose-500/10 px-2.5 text-xs font-bold text-rose-300 transition hover:bg-rose-500/20 hover:text-rose-200 disabled:cursor-wait disabled:opacity-50 sm:px-3"
+            >
+              <LogOut className="h-4 w-4 shrink-0" />
+              <span className="hidden xl:inline">{loggingOut ? "กำลังออก..." : "Logout"}</span>
+            </button>
           </div>
         </header>
 
