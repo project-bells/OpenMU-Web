@@ -79,6 +79,7 @@ export const TOPUP_PACKAGES = Object.freeze([
     baseWcoin: 2500,
     bonusWcoin: 1000,
     totalWcoin: 3500,
+    vipDays: 30,
     bonusPct: 35,
     popular: false,
   },

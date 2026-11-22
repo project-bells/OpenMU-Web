@@ -125,6 +125,11 @@ export function createOpenMuClient(config, fetchImpl = fetch) {
         method: "POST",
         body: { coinType, amount, reason, reference },
       }),
+    grantVipMembership: (loginName, { durationDays, reason, reference }) =>
+      request(`/api/accounts/${encodeURIComponent(loginName)}/cash-shop/vip-grants`, {
+        method: "POST",
+        body: { durationDays, reason, reference },
+      }),
     getServerStatus: () => request("/api/server/status"),
     getCharacterRankings: (queryString = "") =>
       request(`/api/server/rankings/characters${queryString ? `?${queryString}` : ""}`),

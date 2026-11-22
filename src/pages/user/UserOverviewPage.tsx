@@ -35,6 +35,8 @@ export default function UserOverviewPage() {
     characters,
     refreshSummary,
   } = useUserDashboard();
+  const vipUntil = account?.vipUntil ? new Date(account.vipUntil) : null;
+  const isVip = Boolean(vipUntil && vipUntil.getTime() > Date.now());
 
   const [busyChar, setBusyChar] = useState<string | null>(null);
   const [charMsg, setCharMsg] = useState<{ ok: boolean; text: string } | null>(null);
@@ -99,6 +101,13 @@ export default function UserOverviewPage() {
                   }`}
                 >
                   {account?.state || "Normal"}
+                </span>
+                <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-black border ${
+                  isVip
+                    ? "bg-amber-400/20 text-amber-300 border-amber-400/40"
+                    : "bg-white/5 text-slate-400 border-white/10"
+                }`}>
+                  {isVip ? `VIP ถึง ${vipUntil!.toLocaleDateString("th-TH")}` : "ผู้เล่นทั่วไป"}
                 </span>
                 <span
                   className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold border ${

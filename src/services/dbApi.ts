@@ -136,6 +136,7 @@ export interface AccountProfile {
   loginName: string;
   email: string;
   state: string;
+  vipUntil?: string | null;
   isOnline: boolean;
   onlineTimeSeconds: number;
   credits: number;
@@ -204,6 +205,7 @@ export interface TopupPackage {
   baseWcoin?: number;
   bonusWcoin: number;
   totalWcoin?: number;
+  vipDays?: number;
   bonusPct?: number;
   popular?: boolean;
   badge?: string;
@@ -580,9 +582,10 @@ export const TOPUP_PACKAGES: TopupPackage[] = [
     baseWcoin: 2500,
     bonusWcoin: 1000,
     totalWcoin: 3500,
+    vipDays: 30,
     bonusPct: 35,
     badge: "+35% VIP MAX",
-    description: "คุ้มสุดขีดระดับราชา รับ Credits & WCoinC สูงสุด",
+    description: "คุ้มสุดขีดระดับราชา รับ Credits, WCoinC และสิทธิ์เข้า SV3-VIP 30 วัน",
   },
 ];
 
@@ -607,6 +610,7 @@ export function normalizeTopupPackage(raw: any): TopupPackage {
     baseWcoin,
     bonusWcoin,
     totalWcoin,
+    vipDays: Number(raw?.vipDays ?? 0),
     bonusPct: Number(raw?.bonusPct ?? 0),
     popular: Boolean(raw?.popular),
     badge: raw?.badge ?? raw?.tag ?? undefined,
@@ -644,6 +648,7 @@ export function normalizePlayerSummary(raw: any): PlayerSessionSummary {
     loginName: String(rawAcc?.loginName ?? ""),
     email: String(rawAcc?.email ?? rawAcc?.eMail ?? ""),
     state: String(rawAcc?.state ?? "Normal"),
+    vipUntil: rawAcc?.vipUntil ?? null,
     isOnline: Boolean(rawAcc?.isOnline ?? rawAcc?.online ?? false),
     onlineTimeSeconds,
     credits: creditsBalance,

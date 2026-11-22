@@ -297,35 +297,44 @@ export function createWalletService({ config, store, openmuClient, paypalClient 
       return { status: "FULFILLED", idempotent: true, order: paid.order, wallet: paid.wallet };
     }
 
-    if (paid.order.wcoinAmount > 0) {
-      try {
+    const packageDef = TOPUP_PACKAGES_BY_ID.get(paid.order.packageId);
+    try {
+      let openmuGrantId = null;
+      if (paid.order.wcoinAmount > 0) {
         const res = await openmuClient.grantCashShopCoins(paid.order.loginName, {
           coinType: "WCoinC",
           amount: paid.order.wcoinAmount,
           reason: `Top-up order ${paid.order.orderCode} (${paid.order.packageId})`,
           reference: paid.order.openmuReference,
         });
-        const fulfilledOrder = await store.markTopupFulfilledTransaction({
-          orderId: paid.order.id,
-          openmuGrantId: res.data?.id ?? null,
-        });
-        return { status: "FULFILLED", idempotent: false, order: fulfilledOrder, wallet: paid.wallet };
-      } catch (error) {
-        await store.markTopupFailedTransaction({
-          orderId: paid.order.id,
-          reason: error?.message || "Failed to grant WCoinC on OpenMU.",
-        });
-        throw new StoreError(
-          503,
-          "TOPUP_WCOIN_PENDING",
-          "Payment confirmed and Credits added, but WCoinC delivery to OpenMU failed and awaits retry.",
-          { orderId: paid.order.id, wallet: paid.wallet }
-        );
+        openmuGrantId = res.data?.id ?? null;
       }
-    }
 
-    const fulfilledOrder = await store.markTopupFulfilledTransaction({ orderId: paid.order.id });
-    return { status: "FULFILLED", idempotent: false, order: fulfilledOrder, wallet: paid.wallet };
+      if (packageDef?.vipDays > 0) {
+        await openmuClient.grantVipMembership(paid.order.loginName, {
+          durationDays: packageDef.vipDays,
+          reason: `Top-up order ${paid.order.orderCode} (${paid.order.packageId})`,
+          reference: `${paid.order.openmuReference}:vip`,
+        });
+      }
+
+      const fulfilledOrder = await store.markTopupFulfilledTransaction({
+        orderId: paid.order.id,
+        openmuGrantId,
+      });
+      return { status: "FULFILLED", idempotent: false, order: fulfilledOrder, wallet: paid.wallet };
+    } catch (error) {
+      await store.markTopupFailedTransaction({
+        orderId: paid.order.id,
+        reason: error?.message || "Failed to deliver OpenMU top-up benefits.",
+      });
+      throw new StoreError(
+        503,
+        "TOPUP_BENEFITS_PENDING",
+        "Payment confirmed and Credits added, but OpenMU benefits delivery failed and awaits retry.",
+        { orderId: paid.order.id, wallet: paid.wallet }
+      );
+    }
   }
 
   async function capturePayPalOrder({ loginName, orderId, ipAddress = null }) {

@@ -62,6 +62,7 @@ function createFakeOpenMuServer() {
         eMail: "hero01@example.com",
         password: "StrongPass123",
         state: "Normal",
+        vipUntil: null,
         online: false,
         serverId: null,
         onlineTimeSeconds: 7500,
@@ -191,6 +192,7 @@ function createFakeOpenMuServer() {
         loginName: acc.loginName,
         eMail: acc.eMail,
         state: acc.state,
+        vipUntil: acc.vipUntil,
         online: acc.online,
         serverId: acc.serverId,
         onlineTimeSeconds: acc.onlineTimeSeconds,
@@ -229,6 +231,31 @@ function createFakeOpenMuServer() {
       };
       grants.push(grant);
       return send(200, grant);
+    }
+
+    const vipGrantMatch = url.pathname.match(/^\/api\/accounts\/([^/]+)\/cash-shop\/vip-grants$/);
+    if (vipGrantMatch && req.method === "POST") {
+      if (forceGrantStatus) {
+        return send(forceGrantStatus, { message: `Forced upstream failure ${forceGrantStatus}` });
+      }
+      const acc = accounts.get(decodeURIComponent(vipGrantMatch[1]).toLowerCase());
+      if (!acc) return send(404, { message: "Account not found" });
+
+      const existing = grants.find((g) => g.reference === body.reference);
+      if (existing) return send(200, existing);
+
+      const now = Date.now();
+      const current = acc.vipUntil ? new Date(acc.vipUntil).getTime() : 0;
+      acc.vipUntil = new Date(Math.max(now, current) + Number(body.durationDays) * 86_400_000).toISOString();
+      const grant = {
+        id: crypto.randomUUID(),
+        loginName: acc.loginName,
+        durationDays: Number(body.durationDays),
+        reference: body.reference,
+        vipUntil: acc.vipUntil,
+      };
+      grants.push(grant);
+      return send(201, grant);
     }
 
     const passMatch = url.pathname.match(/^\/api\/accounts\/([^/]+)\/password\/change$/);
@@ -750,4 +777,31 @@ test("Full BFF integration: Auth isolation, P0-A Online Rewards, P0-B Credit Exc
   const auditBody = await auditRes.json();
   assert.ok(auditBody.logs.some((l) => l.action === "TOPUP_PAID_AND_CREDITED"));
   assert.ok(auditBody.logs.some((l) => l.action === "ADMIN_WALLET_ADJUST"));
+
+  // Emperor Pack delivers 30 VIP days exactly once in addition to Credits and WCoinC.
+  const vipCreate = await fetch(`${bff.url}/api/topup/orders`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Cookie: playerCookieHeader, "Idempotency-Key": "topup-vip-1" },
+    body: JSON.stringify({ packageId: "tier-1000", provider: "dev_sandbox" }),
+  });
+  assert.equal(vipCreate.status, 201);
+  const vipOrder = (await vipCreate.json()).order;
+  const vipConfirm = await fetch(`${bff.url}/api/topup/orders/${vipOrder.id}/sandbox-confirm`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Cookie: playerCookieHeader },
+    body: JSON.stringify({}),
+  });
+  assert.equal(vipConfirm.status, 200);
+  assert.equal((await vipConfirm.json()).order.status, "FULFILLED");
+  const vipUntil = new Date(fakeOpenMu.accounts.get("hero01").vipUntil).getTime();
+  assert.ok(vipUntil > Date.now() + (29 * 86_400_000));
+  assert.equal(fakeOpenMu.grants.filter((grant) => grant.reference === `webtopup:${vipOrder.id}:vip`).length, 1);
+
+  const vipReplay = await fetch(`${bff.url}/api/topup/orders/${vipOrder.id}/sandbox-confirm`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Cookie: playerCookieHeader },
+    body: JSON.stringify({}),
+  });
+  assert.equal(vipReplay.status, 200);
+  assert.equal(fakeOpenMu.grants.filter((grant) => grant.reference === `webtopup:${vipOrder.id}:vip`).length, 1);
 });

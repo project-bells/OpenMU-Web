@@ -251,6 +251,11 @@ export default function UserDonatePage() {
                     <span className="ml-1.5 text-purple-300">(+{pkg.bonusWcoin} WCoinC)</span>
                   )}
                 </div>
+                {(pkg.vipDays ?? 0) > 0 && (
+                  <div className="mt-1 font-mono text-[11px] font-bold text-amber-300">
+                    + VIP {pkg.vipDays} วัน • เข้า SV3-VIP
+                  </div>
+                )}
                 <p className="mt-1.5 text-[11px] text-slate-400">{pkg.description}</p>
               </div>
             </button>

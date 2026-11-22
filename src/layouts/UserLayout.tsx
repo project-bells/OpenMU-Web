@@ -23,6 +23,7 @@ export default function UserLayout() {
     isAuthenticated,
     isLoading,
     username,
+    account,
     availableHours,
     credits,
     wcoin,
@@ -34,6 +35,8 @@ export default function UserLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const vipUntil = account?.vipUntil ? new Date(account.vipUntil) : null;
+  const isVip = Boolean(vipUntil && vipUntil.getTime() > Date.now());
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -136,9 +139,11 @@ export default function UserLayout() {
             <div className="truncate">
               <div className="flex items-center gap-1.5 font-bold text-white text-xs truncate">
                 <span>@{username}</span>
-                <span className="rounded bg-amber-400/20 px-1 py-0.2 text-[9px] font-extrabold text-amber-300">
-                  VIP
-                </span>
+                {isVip && (
+                  <span className="rounded bg-amber-400/20 px-1 py-0.2 text-[9px] font-extrabold text-amber-300">
+                    VIP
+                  </span>
+                )}
               </div>
               <div className="flex items-center gap-1 text-[11px] text-slate-400 truncate mt-0.5">
                 <Swords className="h-3 w-3 text-amber-400 shrink-0" />
