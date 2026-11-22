@@ -976,6 +976,19 @@ export async function purchaseVipMembership(
   }
 }
 
+export async function claimStarterKit(
+  characterName: string
+): Promise<{ success: boolean; idempotent?: boolean; message?: string; error?: string }> {
+  try {
+    return await apiJson("/api/starter-kit/claim", {
+      method: "POST",
+      body: JSON.stringify({ characterName }),
+    });
+  } catch (err: any) {
+    return { success: false, error: err?.message || "Starter Kit claim failed" };
+  }
+}
+
 export async function createTopupOrder(
   packageId: string,
   provider: "promptpay_manual" | "paypal" | "webhook_hmac" | "dev_sandbox",

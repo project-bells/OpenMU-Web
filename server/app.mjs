@@ -403,6 +403,58 @@ export function createHandler(config, deps = {}) {
         return json(response, 200, { success: true, ...result, ...summary });
       }
 
+      if (pathname === "/api/starter-kit/claim" && method === "POST") {
+        const session = await requirePlayer(request, response);
+        if (!session) return;
+        if (checkRateLimit("starter-kit", session.loginName, { limit: 3, windowMs: 60_000 }).limited) {
+          return json(response, 429, { success: false, code: "RATE_LIMITED", message: "Too many starter-kit requests." });
+        }
+
+        const raw = await readJsonBody(request);
+        const characterName = String(raw?.characterName ?? "").trim();
+        const { data: profile } = await openmuClient.getAccountProfile(session.loginName);
+        const character = (profile.characters ?? []).find((candidate) =>
+          String(candidate.name ?? candidate.Name ?? "").toLowerCase() === characterName.toLowerCase()
+        );
+        if (!character) {
+          return json(response, 404, { success: false, code: "CHARACTER_NOT_FOUND", message: "Character not found in this account." });
+        }
+
+        const classText = String(character.classShort ?? character.ClassShort ?? character.className ?? character.ClassName ?? "").toUpperCase();
+        const packageSequence = classText.includes("RAGE") || classText === "RF" || classText === "FM" ? 9007
+          : classText.includes("SUM") || classText === "DMS" ? 9006
+          : classText === "DL" || classText === "LE" || classText.includes("LORD") ? 9005
+          : classText === "MG" || classText === "DM" || classText.includes("GLADIATOR") ? 9004
+          : classText.includes("ELF") || classText === "HE" ? 9003
+          : classText === "DW" || classText === "SM" || classText === "GM" || classText.includes("WIZ") ? 9002
+          : 9001;
+        const priceSequence = 2000 + (packageSequence - 9000);
+        const { data: grant, status } = await openmuClient.grantCashShopItems(session.loginName, {
+          packageSequence,
+          priceSequence,
+          reason: `Free 7-day starter kit for ${characterName}`,
+          reference: `starter-kit-v1:${session.loginName.toLowerCase()}`,
+        });
+        await store.recordAuditLog({
+          actorType: "player",
+          actorName: session.loginName,
+          action: "STARTER_KIT_CLAIM",
+          targetType: "characters",
+          targetId: characterName,
+          outcome: "SUCCESS",
+          ipAddress,
+          metadata: { packageSequence },
+        });
+        return json(response, status === 201 ? 201 : 200, {
+          success: true,
+          idempotent: status !== 201,
+          characterName,
+          packageSequence,
+          grant,
+          message: "Starter Kit was added to Item Mall storage.",
+        });
+      }
+
       // P0-C: Credit Top-Up & Payment Processing
       if (pathname === "/api/topup/orders" && method === "POST") {
         const session = await requirePlayer(request, response);

@@ -303,13 +303,13 @@ export default function Hero({
               </div>
 
               {/* Starter Kit Highlight inside Hero Card */}
-              <div className="mt-4 rounded-2xl border border-amber-400/20 bg-amber-400/5 p-3.5">
+              <a href="/user/dashboard" className="mt-4 block rounded-2xl border border-amber-400/20 bg-amber-400/5 p-3.5 transition hover:border-amber-300/50 hover:bg-amber-400/10">
                 <div className="text-[10px] font-bold tracking-wider text-amber-300 uppercase">
                   {h.kitTitle}
                 </div>
                 <div className="mt-0.5 text-xs font-bold text-white">{h.kitDesc}</div>
                 <div className="mt-0.5 text-[11px] text-amber-200/80">{h.kitCta}</div>
-              </div>
+              </a>
 
               <button
                 type="button"

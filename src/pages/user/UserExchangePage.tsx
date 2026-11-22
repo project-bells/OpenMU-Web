@@ -10,9 +10,10 @@ import {
   Info,
   Gem,
   Crown,
+  Gift,
 } from "lucide-react";
 import { useUserDashboard } from "../../context/UserDashboardContext";
-import { purchaseVipMembership } from "../../services/dbApi";
+import { claimStarterKit, purchaseVipMembership } from "../../services/dbApi";
 
 function formatDuration(totalSeconds: number): string {
   const safe = Math.max(0, Math.floor(totalSeconds));
@@ -36,6 +37,7 @@ export default function UserExchangePage() {
     exchanges,
     orders,
     account,
+    characters,
     refreshSummary,
   } = useUserDashboard();
 
@@ -48,6 +50,9 @@ export default function UserExchangePage() {
   const [exchangeFeedback, setExchangeFeedback] = useState<{ ok: boolean; message: string } | null>(null);
   const [buyingVip, setBuyingVip] = useState(false);
   const [vipFeedback, setVipFeedback] = useState<{ ok: boolean; message: string } | null>(null);
+  const [starterCharacter, setStarterCharacter] = useState("");
+  const [claimingStarter, setClaimingStarter] = useState(false);
+  const [starterFeedback, setStarterFeedback] = useState<{ ok: boolean; message: string } | null>(null);
   const vipUntil = account?.vipUntil ? new Date(account.vipUntil) : null;
   const isVip = Boolean(vipUntil && vipUntil.getTime() > Date.now());
 
@@ -108,6 +113,20 @@ export default function UserExchangePage() {
     } else {
       setVipFeedback({ ok: false, message: result.error || "ไม่สามารถซื้อ VIP ได้" });
     }
+  };
+
+  const handleStarterClaim = async () => {
+    if (!starterCharacter || claimingStarter) return;
+    setClaimingStarter(true);
+    setStarterFeedback(null);
+    const result = await claimStarterKit(starterCharacter);
+    setClaimingStarter(false);
+    setStarterFeedback({
+      ok: result.success,
+      message: result.success
+        ? "รับ Starter Kit สำเร็จ! เปิด Item Mall ในเกมแล้วนำชุดออกมาใช้ อายุ 7 วันจะเริ่มนับตอนนำออก"
+        : result.error || "ไม่สามารถรับ Starter Kit ได้ หรือบัญชีนี้เคยรับแล้ว",
+    });
   };
 
   return (
@@ -171,6 +190,55 @@ export default function UserExchangePage() {
               : "พร้อมใช้งานทันทีใน Cash Shop (ปุ่ม X ในเกม)"}
           </div>
         </div>
+      </div>
+
+      <div className="rounded-3xl border border-amber-400/35 bg-gradient-to-r from-amber-500/15 via-[#0b101c] to-purple-500/10 p-6 shadow-xl">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex gap-4">
+            <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-amber-400/20 text-amber-300">
+              <Gift className="h-6 w-6" />
+            </div>
+            <div>
+              <h2 className="font-display text-lg font-black text-white">Free Starter Kit — รับผ่าน Item Mall</h2>
+              <p className="mt-1 text-xs leading-5 text-slate-300">
+                ชุดครบเซ็ต +9 Option +16, อาวุธ +9 Option +16 + Skill และ Demon Pet • ใช้งาน 7 วัน
+              </p>
+              <p className="mt-1 text-[11px] font-bold text-amber-300">
+                ผูกกับตัวละคร • ห้ามขาย/ตั้งร้าน • รับได้บัญชีละ 1 ครั้ง • เริ่มนับเมื่อกดนำออกจาก Item Mall
+              </p>
+            </div>
+          </div>
+          <div className="flex w-full flex-col gap-2 lg:w-[360px]">
+            <select
+              value={starterCharacter}
+              onChange={(event) => {
+                setStarterCharacter(event.target.value);
+                setStarterFeedback(null);
+              }}
+              className="rounded-2xl border border-white/15 bg-[#101624] px-4 py-3 text-sm font-bold text-white focus:border-amber-400 focus:outline-none"
+            >
+              <option value="">เลือกตัวละครที่จะรับชุด</option>
+              {characters.map((character) => (
+                <option key={character.name} value={character.name}>
+                  {character.name} — {character.className}
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              disabled={!starterCharacter || claimingStarter}
+              onClick={handleStarterClaim}
+              className="btn-shine rounded-2xl bg-gradient-to-r from-amber-400 to-orange-500 px-5 py-3 text-sm font-black text-slate-950 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              {claimingStarter ? "กำลังส่งเข้า Item Mall..." : "รับ Starter Kit ฟรี"}
+            </button>
+          </div>
+        </div>
+        {starterFeedback && (
+          <div className={`mt-4 rounded-2xl border p-3 text-xs font-bold ${starterFeedback.ok ? "border-emerald-400/40 bg-emerald-500/15 text-emerald-300" : "border-rose-400/40 bg-rose-500/15 text-rose-300"}`}>
+            {starterFeedback.message}
+          </div>
+        )}
       </div>
 
       {/* P0-A + P0-B Forms */}
